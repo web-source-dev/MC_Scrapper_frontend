@@ -311,7 +311,7 @@ export function ResultsTable({ carriers, truncated, onClear }: Props) {
           <span className="sr-only">Filter results</span>
           <input
             type="search"
-            placeholder="Filter this list"
+            placeholder="Filter results…"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -337,18 +337,101 @@ export function ResultsTable({ carriers, truncated, onClear }: Props) {
               <option value="email">Emails</option>
             </select>
           </label>
-          <button type="button" className="ghost" onClick={() => setBulkOpen(true)}>
-            Bulk email
+          <button type="button" className="ghost toolbar-btn" onClick={() => setBulkOpen(true)}>
+            <span className="toolbar-btn-full">Bulk email</span>
+            <span className="toolbar-btn-short">Email</span>
           </button>
-          <button type="button" className="ghost" onClick={downloadCsv}>
+          <button type="button" className="ghost toolbar-btn" onClick={downloadCsv}>
             Export
           </button>
           {onClear ? (
-            <button type="button" className="ghost" onClick={onClear}>
+            <button type="button" className="ghost toolbar-btn" onClick={onClear}>
               Clear
             </button>
           ) : null}
         </div>
+      </div>
+
+      <div className="results-mobile-bar">
+        <label className="mobile-sort">
+          <span className="sr-only">Sort by</span>
+          <select
+            value={`${sortKey}-${sortDir}`}
+            onChange={(event) => {
+              const [key, dir] = event.target.value.split("-") as [SortKey, "asc" | "desc"];
+              setSortKey(key);
+              setSortDir(dir);
+              setPage(1);
+            }}
+          >
+            <option value="mc-asc">MC ↑</option>
+            <option value="mc-desc">MC ↓</option>
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
+            <option value="trucks-desc">Trucks ↓</option>
+            <option value="trucks-asc">Trucks ↑</option>
+            <option value="state-asc">State A–Z</option>
+            <option value="safety-asc">Safety A–Z</option>
+          </select>
+        </label>
+        <button type="button" className="ghost mobile-select-page" onClick={togglePage}>
+          {pageRows.length > 0 && pageRows.every((row) => selected.has(row.id)) ? "Deselect page" : "Select page"}
+        </button>
+      </div>
+
+      <div className="results-mobile-list">
+        {pageRows.map((carrier) => (
+          <article
+            key={carrier.id}
+            className={`result-card ${expanded === carrier.id ? "is-open" : ""} ${selected.has(carrier.id) ? "is-selected" : ""}`}
+          >
+            <div
+              className="result-card-head"
+              onClick={() => setExpanded((current) => (current === carrier.id ? null : carrier.id))}
+            >
+              <input
+                type="checkbox"
+                className="result-card-check"
+                checked={selected.has(carrier.id)}
+                onChange={() => toggleRow(carrier.id)}
+                onClick={(event) => event.stopPropagation()}
+                aria-label={`Select ${carrier.mcDisplay || carrier.legalName}`}
+              />
+              <div className="result-card-body">
+                <div className="result-card-top">
+                  <span className="result-card-mc mono">{carrier.mcDisplay || "—"}</span>
+                  <span className={`badge ${safetyClass(carrier.safetyRating)}`}>{carrier.safetyRating}</span>
+                  {carrier.hazmat ? <span className="chip haz">HM</span> : null}
+                </div>
+                <strong className="result-card-name">{carrier.legalName || "Unnamed carrier"}</strong>
+                {carrier.dbaName ? <span className="result-card-dba">{carrier.dbaName}</span> : null}
+                <p className="result-card-meta">
+                  {[carrier.location, `${carrier.trucks} trucks`, carrier.dotNumber ? `DOT ${carrier.dotNumber}` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </div>
+              {carrier.phone ? (
+                <a
+                  className="result-card-call"
+                  href={`tel:${carrier.phone.replace(/\D/g, "")}`}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  Call
+                </a>
+              ) : null}
+            </div>
+            {expanded === carrier.id ? (
+              <div className="result-card-detail">
+                <CarrierProfile
+                  carrier={carrier}
+                  snapshot={snapshotFor(carrier, snapshots)}
+                  snapshotLoading={Boolean(snapshotLoading[carrier.id])}
+                />
+              </div>
+            ) : null}
+          </article>
+        ))}
       </div>
 
       <div className="table-wrap">

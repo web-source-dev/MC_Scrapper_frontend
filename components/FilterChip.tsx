@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { FilterMenuPortal, useIsMobileFilter } from "@/lib/filterMenuPortal";
 
 export type FilterChipOption = {
   id: string;
@@ -30,7 +31,9 @@ export function FilterChip({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const isMobile = useIsMobileFilter();
   const selected = options.find((item) => item.id === value);
   const isOn = alwaysOn || (value !== defaultValue && value !== "");
   const selectedText = selected?.short || selected?.label || "";
@@ -51,7 +54,10 @@ export function FilterChip({
 
   useEffect(() => {
     function handleClick(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function handleKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
@@ -68,6 +74,71 @@ export function FilterChip({
     if (!open) setQuery("");
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open, isMobile]);
+
+  const menuClass = [
+    "filter-chip-menu",
+    grid ? "is-wide" : "",
+    isMobile ? "is-mobile-sheet" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const menu = (
+    <div className={menuClass} id={menuId} role="listbox" ref={menuRef}>
+      {isMobile ? (
+        <div className="filter-chip-menu-head">
+          <strong>{label}</strong>
+          <button type="button" className="text-btn filter-chip-menu-done" onClick={() => setOpen(false)}>
+            Done
+          </button>
+        </div>
+      ) : null}
+      {searchable ? (
+        <input
+          className="filter-chip-search"
+          value={query}
+          placeholder={`Search ${label.toLowerCase()}`}
+          onChange={(event) => setQuery(event.target.value)}
+          autoFocus={isMobile}
+        />
+      ) : null}
+      <div className={grid ? "filter-chip-list is-grid" : "filter-chip-list"}>
+        {visible.map((option) => {
+          const wide = !option.short && (option.id === "" || option.label.length > 12);
+          return (
+            <button
+              key={option.id || "empty"}
+              type="button"
+              role="option"
+              aria-selected={option.id === value}
+              className={[
+                "filter-chip-option",
+                option.id === value ? "is-on" : "",
+                wide ? "is-wide" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => {
+                onChange(option.id);
+                setOpen(false);
+              }}
+            >
+              {grid ? option.short || option.label : option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <div className="filter-chip" ref={rootRef}>
       <button
@@ -83,48 +154,18 @@ export function FilterChip({
           <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" />
         </svg>
       </button>
-      {open ? (
-        <div
-          className={grid ? "filter-chip-menu is-wide" : "filter-chip-menu"}
-          id={menuId}
-          role="listbox"
-        >
-          {searchable ? (
-            <input
-              className="filter-chip-search"
-              value={query}
-              placeholder={`Search ${label.toLowerCase()}`}
-              onChange={(event) => setQuery(event.target.value)}
-              autoFocus
-            />
-          ) : null}
-          <div className={grid ? "filter-chip-list is-grid" : "filter-chip-list"}>
-            {visible.map((option) => {
-              const wide = !option.short && (option.id === "" || option.label.length > 12);
-              return (
-                <button
-                  key={option.id || "empty"}
-                  type="button"
-                  role="option"
-                  aria-selected={option.id === value}
-                  className={[
-                    "filter-chip-option",
-                    option.id === value ? "is-on" : "",
-                    wide ? "is-wide" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() => {
-                    onChange(option.id);
-                    setOpen(false);
-                  }}
-                >
-                  {grid ? option.short || option.label : option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {open && isMobile ? (
+        <FilterMenuPortal open={open}>
+          <button
+            type="button"
+            className="filter-chip-backdrop"
+            aria-label="Close filter menu"
+            onClick={() => setOpen(false)}
+          />
+          {menu}
+        </FilterMenuPortal>
+      ) : open ? (
+        menu
       ) : null}
     </div>
   );

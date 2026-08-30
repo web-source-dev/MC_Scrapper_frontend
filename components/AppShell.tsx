@@ -11,12 +11,20 @@ import { EMAIL_OPEN_EVENT, EMAIL_TEMPLATES_EVENT } from "@/lib/email";
 import { loadDeskPage, saveDeskPage } from "@/lib/searchCache";
 import type { AuthUser } from "@/lib/session";
 
-function QuotaMeter({ user }: { user: AuthUser }) {
+function QuotaMeter({ user, compact = false }: { user: AuthUser; compact?: boolean }) {
   const used = user.usedToday ?? 0;
   const limit = user.dailyLimit ?? 0;
   const remaining = user.remaining ?? 0;
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
   const tone = remaining <= 0 ? "is-out" : pct >= 90 ? "is-warn" : "";
+
+  if (compact) {
+    return (
+      <p className={`quota-meter quota-meter-compact ${tone}`} title={`${remaining.toLocaleString()} MCs left today`}>
+        <span className="quota-count">{used.toLocaleString()}/{limit.toLocaleString()}</span>
+      </p>
+    );
+  }
 
   return (
     <p className={`quota-meter ${tone}`} title={`${user.planName || "Plan"} · ${remaining.toLocaleString()} MCs left today`}>
@@ -132,10 +140,21 @@ function Desk() {
       <div className="app-content">
         <header className="app-header">
           <div className="topbar">
-            <p className="page-title">{page === "templates" ? "Templates" : "Search"}</p>
+            <div className="mobile-brand">
+              <span className="mark" aria-hidden="true">
+                MC
+              </span>
+              <p className="page-title">{page === "templates" ? "Templates" : "Search"}</p>
+            </div>
             <div className="header-tools">
               <SourceStatus />
               <QuotaMeter user={user} />
+              <QuotaMeter user={user} compact />
+              <div className="mobile-session">
+                <button type="button" className="ghost sign-out" onClick={() => void logout()} aria-label="Sign out">
+                  Out
+                </button>
+              </div>
             </div>
           </div>
         </header>

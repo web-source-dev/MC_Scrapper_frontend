@@ -224,11 +224,12 @@ export function SearchTool() {
             <>
               <div className="results-meta-row">
                 <p className="results-meta">
-                  <strong>{result?.returned ?? carriers.length}</strong> MCs matched
-                  {summaryLabel ? ` · ${summaryLabel}` : ""}
-                  {result?.charged != null ? ` · ${result.charged.toLocaleString()} counted today` : ""}
-                  {result?.summary.withPhone != null ? ` · ${result.summary.withPhone} with phone` : ""}
-                  {result?.quotaCapped ? " · results capped by today’s plan" : ""}
+                  <strong>{result?.returned ?? carriers.length}</strong> matched
+                  {summaryLabel ? <span className="results-meta-detail"> · {summaryLabel}</span> : null}
+                  {result?.summary.withPhone != null ? (
+                    <span className="results-meta-detail"> · {result.summary.withPhone} w/ phone</span>
+                  ) : null}
+                  {result?.quotaCapped ? <span className="results-meta-detail"> · capped</span> : null}
                 </p>
                 <button type="button" className="ghost results-clear" onClick={() => void clearResults()}>
                   Clear
@@ -248,17 +249,35 @@ export function SearchTool() {
       </div>
 
       <aside className="rail" aria-label="Usage and recent searches">
-        {user ? <UsagePanel user={user} /> : null}
-        {recents.length ? (
-          <div className="recents">
-            <p>Recent</p>
-            {recents.map((item) => (
-              <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
-                {item.label}
-              </button>
-            ))}
+        <details className="rail-drawer">
+          <summary>Usage &amp; recent</summary>
+          <div className="rail-drawer-body">
+            {user ? <UsagePanel user={user} /> : null}
+            {recents.length ? (
+              <div className="recents">
+                <p>Recent</p>
+                {recents.map((item) => (
+                  <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </details>
+        <div className="rail-desktop">
+          {user ? <UsagePanel user={user} /> : null}
+          {recents.length ? (
+            <div className="recents">
+              <p>Recent</p>
+              {recents.map((item) => (
+                <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </aside>
     </div>
   );

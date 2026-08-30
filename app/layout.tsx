@@ -21,6 +21,12 @@ export const metadata: Metadata = {
     "Verify SAFER-active, MC-authorized USA carriers by MC range, USDOT, company name, location, or phone using the FMCSA census SODA API.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable} h-full`}>

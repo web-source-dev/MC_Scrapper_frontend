@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import type { MetaResponse, SearchFormState, SearchMode } from "@/lib/types";
 import { EquipmentSelect } from "./EquipmentSelect";
 import { FilterChip } from "./FilterChip";
@@ -49,11 +49,31 @@ const REQUIREMENT_OPTIONS = [
   { id: "freightOnly", label: "Freight only" },
 ] as const;
 
+function countActiveFilters(form: SearchFormState) {
+  let count = 0;
+  if (form.fleetPreset !== "any") count += 1;
+  if (form.state) count += 1;
+  if (form.safetyRating !== "any") count += 1;
+  if (form.mcs150Months !== "any") count += 1;
+  if (form.equipmentTypes.length) count += 1;
+  if (REQUIREMENT_OPTIONS.some((item) => form[item.id])) count += 1;
+  if (!form.strictSafer) count += 1;
+  if (form.minTrucks && form.minTrucks !== "1") count += 1;
+  if (form.maxTrucks) count += 1;
+  if (form.minDrivers) count += 1;
+  if (form.maxDrivers) count += 1;
+  if (form.city) count += 1;
+  if (form.zip) count += 1;
+  return count;
+}
+
 export function SearchForm({ meta, form, loading, remaining, clockBlocked, onChange, onSubmit }: Props) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const mode = form.searchMode;
   const showStateFilter = mode !== "location";
   const fleets = meta.fleetPresets?.length ? meta.fleetPresets : FALLBACK_FLEETS;
   const mcsOptions = meta.mcs150Options?.length ? meta.mcs150Options : FALLBACK_MCS;
+  const activeFilters = useMemo(() => countActiveFilters(form), [form]);
 
   function applyFleet(id: string) {
     const preset = fleets.find((item) => item.id === id) || fleets[0];
@@ -104,104 +124,118 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
     });
   }
 
+  const filterChipControls = (
+    <>
+      <FilterChip
+        label="Search"
+        value={form.searchMode}
+        options={meta.searchModes}
+        onChange={(searchMode) => onChange({ searchMode: searchMode as SearchMode })}
+        alwaysOn
+        showSelectedOnly
+      />
+      {mode === "mc-lookup" || mode === "id-list" ? (
+        <FilterChip
+          label="Type"
+          value={form.identifierType}
+          options={[
+            { id: "mc", label: "MC" },
+            { id: "dot", label: "USDOT" },
+          ]}
+          onChange={(identifierType) => onChange({ identifierType: identifierType as "mc" | "dot" })}
+          alwaysOn
+        />
+      ) : null}
+      <FilterChip
+        label="Fleet"
+        value={form.fleetPreset}
+        options={fleets}
+        onChange={applyFleet}
+        defaultValue="any"
+      />
+      <FilterChip
+        label="State"
+        value={form.state}
+        options={[
+          { id: "", label: mode === "location" ? "Select a state" : "All states" },
+          ...meta.states.map((item) => ({ id: item.code, label: `${item.code} — ${item.name}`, short: item.code })),
+        ]}
+        onChange={(state) => onChange({ state })}
+      />
+      <FilterChip
+        label="Safety"
+        value={form.safetyRating}
+        options={meta.safetyRatings}
+        onChange={(safetyRating) => onChange({ safetyRating })}
+        defaultValue="any"
+      />
+      <FilterChip
+        label="MCS-150"
+        value={form.mcs150Months}
+        options={mcsOptions.map((item) => ({
+          id: item.id,
+          label: item.label,
+          short: item.id === "any" ? "Any" : `${item.id} mo`,
+        }))}
+        onChange={(mcs150Months) => onChange({ mcs150Months })}
+        defaultValue="any"
+      />
+      <FilterChip
+        label="Results"
+        value={form.resultLimit}
+        options={RESULT_LIMITS}
+        onChange={(resultLimit) => onChange({ resultLimit })}
+        alwaysOn
+      />
+      <EquipmentSelect
+        options={meta.equipmentTypes}
+        selected={form.equipmentTypes}
+        onChange={(equipmentTypes) => onChange({ equipmentTypes })}
+      />
+      <MultiSelectChip
+        label="Requirements"
+        emptyLabel="Any"
+        options={[...REQUIREMENT_OPTIONS]}
+        selected={selectedRequirements}
+        onChange={applyRequirements}
+        exclusivePairs={[["interstateOnly", "intrastateOnly"]]}
+      />
+      <FilterChip
+        label="SAFER"
+        value={form.strictSafer ? "strict" : "any"}
+        options={[
+          { id: "strict", label: "Strict" },
+          { id: "any", label: "Any" },
+        ]}
+        onChange={(value) => onChange({ strictSafer: value === "strict" })}
+        alwaysOn
+      />
+    </>
+  );
+
+  const filterChipFoot = (
+    <>
+      <button className="text-btn reset-filters" type="button" onClick={clearFilters}>
+        Reset
+      </button>
+      {clockBlocked ? (
+        <p className="quota-hint">Search is locked until this computer’s day and date are correct.</p>
+      ) : remaining != null ? (
+        <p className="quota-hint">{remaining.toLocaleString()} MCs left today</p>
+      ) : null}
+    </>
+  );
+
+  const filterChipsDesktop = (
+    <div className="chip-row" role="group" aria-label="Search filters">
+      {filterChipControls}
+      {filterChipFoot}
+    </div>
+  );
+
   return (
     <form className="search-card search-bar" onSubmit={onSubmit}>
-      <div className="chip-row" role="group" aria-label="Search filters">
-        <FilterChip
-          label="Search"
-          value={form.searchMode}
-          options={meta.searchModes}
-          onChange={(searchMode) => onChange({ searchMode: searchMode as SearchMode })}
-          alwaysOn
-          showSelectedOnly
-        />
-        {mode === "mc-lookup" || mode === "id-list" ? (
-          <FilterChip
-            label="Type"
-            value={form.identifierType}
-            options={[
-              { id: "mc", label: "MC" },
-              { id: "dot", label: "USDOT" },
-            ]}
-            onChange={(identifierType) => onChange({ identifierType: identifierType as "mc" | "dot" })}
-            alwaysOn
-          />
-        ) : null}
-        <FilterChip
-          label="Fleet"
-          value={form.fleetPreset}
-          options={fleets}
-          onChange={applyFleet}
-          defaultValue="any"
-        />
-        <FilterChip
-          label="State"
-          value={form.state}
-          options={[
-            { id: "", label: mode === "location" ? "Select a state" : "All states" },
-            ...meta.states.map((item) => ({ id: item.code, label: `${item.code} — ${item.name}`, short: item.code })),
-          ]}
-          onChange={(state) => onChange({ state })}
-        />
-        <FilterChip
-          label="Safety"
-          value={form.safetyRating}
-          options={meta.safetyRatings}
-          onChange={(safetyRating) => onChange({ safetyRating })}
-          defaultValue="any"
-        />
-        <FilterChip
-          label="MCS-150"
-          value={form.mcs150Months}
-          options={mcsOptions.map((item) => ({
-            id: item.id,
-            label: item.label,
-            short: item.id === "any" ? "Any" : `${item.id} mo`,
-          }))}
-          onChange={(mcs150Months) => onChange({ mcs150Months })}
-          defaultValue="any"
-        />
-        <FilterChip
-          label="Results"
-          value={form.resultLimit}
-          options={RESULT_LIMITS}
-          onChange={(resultLimit) => onChange({ resultLimit })}
-          alwaysOn
-        />
-        <EquipmentSelect
-          options={meta.equipmentTypes}
-          selected={form.equipmentTypes}
-          onChange={(equipmentTypes) => onChange({ equipmentTypes })}
-        />
-        <MultiSelectChip
-          label="Requirements"
-          emptyLabel="Any"
-          options={[...REQUIREMENT_OPTIONS]}
-          selected={selectedRequirements}
-          onChange={applyRequirements}
-          exclusivePairs={[["interstateOnly", "intrastateOnly"]]}
-        />
-        <FilterChip
-          label="SAFER"
-          value={form.strictSafer ? "strict" : "any"}
-          options={[
-            { id: "strict", label: "Strict" },
-            { id: "any", label: "Any" },
-          ]}
-          onChange={(value) => onChange({ strictSafer: value === "strict" })}
-          alwaysOn
-        />
-        <button className="text-btn reset-filters" type="button" onClick={clearFilters}>
-          Reset
-        </button>
-        {clockBlocked ? (
-          <p className="quota-hint">Search is locked until this computer’s day and date are correct.</p>
-        ) : remaining != null ? (
-          <p className="quota-hint">{remaining.toLocaleString()} MCs left today</p>
-        ) : null}
-      </div>
-
-      <div className="search-row">
+      <div className="search-row search-row-primary">
         {mode === "mc-range" ? (
           <>
             <div className="field">
@@ -230,7 +264,7 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
         ) : null}
 
         {mode === "mc-lookup" ? (
-          <div className="field">
+          <div className="field grow">
             <label htmlFor="identifier">{form.identifierType === "dot" ? "USDOT" : "MC"}</label>
             <input
               id="identifier"
@@ -284,13 +318,13 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
           </div>
         ) : null}
 
-        {mode === "location" || showStateFilter ? (
+        {mode === "location" ? (
           <>
             <div className="field">
               <label htmlFor="filter-city">City</label>
               <input
                 id="filter-city"
-                placeholder={mode === "location" ? "City" : "Any"}
+                placeholder="City"
                 value={form.city}
                 onChange={(event) => onChange({ city: event.target.value })}
               />
@@ -300,58 +334,13 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
               <input
                 id="filter-zip"
                 inputMode="numeric"
-                placeholder={mode === "location" ? "ZIP" : "Any"}
+                placeholder="ZIP"
                 value={form.zip}
                 onChange={(event) => onChange({ zip: event.target.value.replace(/\D/g, "").slice(0, 5) })}
               />
             </div>
           </>
         ) : null}
-
-        <div className="field tight">
-          <label htmlFor="min-trucks">Min trucks</label>
-          <input
-            id="min-trucks"
-            inputMode="numeric"
-            placeholder="1"
-            value={form.minTrucks}
-            onChange={(event) =>
-              onChange({ minTrucks: event.target.value.replace(/[^\d]/g, ""), fleetPreset: "any" })
-            }
-          />
-        </div>
-        <div className="field tight">
-          <label htmlFor="max-trucks">Max trucks</label>
-          <input
-            id="max-trucks"
-            inputMode="numeric"
-            placeholder="Any"
-            value={form.maxTrucks}
-            onChange={(event) =>
-              onChange({ maxTrucks: event.target.value.replace(/[^\d]/g, ""), fleetPreset: "any" })
-            }
-          />
-        </div>
-        <div className="field tight">
-          <label htmlFor="min-drivers">Min drivers</label>
-          <input
-            id="min-drivers"
-            inputMode="numeric"
-            placeholder="Any"
-            value={form.minDrivers}
-            onChange={(event) => onChange({ minDrivers: event.target.value.replace(/[^\d]/g, "") })}
-          />
-        </div>
-        <div className="field tight">
-          <label htmlFor="max-drivers">Max drivers</label>
-          <input
-            id="max-drivers"
-            inputMode="numeric"
-            placeholder="Any"
-            value={form.maxDrivers}
-            onChange={(event) => onChange({ maxDrivers: event.target.value.replace(/[^\d]/g, "") })}
-          />
-        </div>
 
         <button className="primary search-submit" type="submit" disabled={loading || remaining === 0 || clockBlocked}>
           {loading
@@ -363,6 +352,103 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
                 : "Search"}
         </button>
       </div>
+
+      <div className="search-filters-wrap">
+        <button
+          type="button"
+          className={`search-filters-toggle ${filtersOpen ? "is-open" : ""}`}
+          aria-expanded={filtersOpen}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          <span>Filters{activeFilters ? ` · ${activeFilters}` : ""}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className={`search-filters-panel ${filtersOpen ? "is-open" : ""}`}>
+          <div className="search-filters-scroll">
+            <div className="search-filters-track" role="group" aria-label="Search filters">
+              {filterChipControls}
+            </div>
+          </div>
+          <div className="search-filters-foot">{filterChipFoot}</div>
+        </div>
+        <div className="search-filters-desktop">{filterChipsDesktop}</div>
+      </div>
+
+      <details className="search-advanced">
+        <summary>More options</summary>
+        <div className="search-row search-row-advanced">
+          {mode !== "location" && showStateFilter ? (
+            <>
+              <div className="field">
+                <label htmlFor="filter-city">City</label>
+                <input
+                  id="filter-city"
+                  placeholder="Any"
+                  value={form.city}
+                  onChange={(event) => onChange({ city: event.target.value })}
+                />
+              </div>
+              <div className="field tight">
+                <label htmlFor="filter-zip">ZIP</label>
+                <input
+                  id="filter-zip"
+                  inputMode="numeric"
+                  placeholder="Any"
+                  value={form.zip}
+                  onChange={(event) => onChange({ zip: event.target.value.replace(/\D/g, "").slice(0, 5) })}
+                />
+              </div>
+            </>
+          ) : null}
+
+          <div className="field tight">
+            <label htmlFor="min-trucks">Min trucks</label>
+            <input
+              id="min-trucks"
+              inputMode="numeric"
+              placeholder="1"
+              value={form.minTrucks}
+              onChange={(event) =>
+                onChange({ minTrucks: event.target.value.replace(/[^\d]/g, ""), fleetPreset: "any" })
+              }
+            />
+          </div>
+          <div className="field tight">
+            <label htmlFor="max-trucks">Max trucks</label>
+            <input
+              id="max-trucks"
+              inputMode="numeric"
+              placeholder="Any"
+              value={form.maxTrucks}
+              onChange={(event) =>
+                onChange({ maxTrucks: event.target.value.replace(/[^\d]/g, ""), fleetPreset: "any" })
+              }
+            />
+          </div>
+          <div className="field tight">
+            <label htmlFor="min-drivers">Min drivers</label>
+            <input
+              id="min-drivers"
+              inputMode="numeric"
+              placeholder="Any"
+              value={form.minDrivers}
+              onChange={(event) => onChange({ minDrivers: event.target.value.replace(/[^\d]/g, "") })}
+            />
+          </div>
+          <div className="field tight">
+            <label htmlFor="max-drivers">Max drivers</label>
+            <input
+              id="max-drivers"
+              inputMode="numeric"
+              placeholder="Any"
+              value={form.maxDrivers}
+              onChange={(event) => onChange({ maxDrivers: event.target.value.replace(/[^\d]/g, "") })}
+            />
+          </div>
+        </div>
+      </details>
     </form>
   );
 }
