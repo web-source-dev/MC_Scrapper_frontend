@@ -335,11 +335,13 @@ export type EmailVariable = {
 export type EmailStatus = {
   ok: boolean;
   connected: boolean;
+  accountCount?: number;
   account: EmailAccount | null;
   accounts: EmailAccount[];
   oauthAvailable: boolean;
   oauthMissing?: string[];
   redirectUri?: string;
+  setupWarning?: string | null;
   templates: EmailTemplate[];
   variables: EmailVariable[];
 };

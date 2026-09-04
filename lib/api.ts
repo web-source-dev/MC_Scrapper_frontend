@@ -128,8 +128,16 @@ export async function fetchEmailStatus() {
 }
 
 export async function fetchGmailConnectUrl() {
-  const response = await fetch(`${API_BASE}/api/email/oauth/url`, { headers: authHeaders() });
-  return readJson<{ ok: boolean; url: string; redirectUri?: string }>(response);
+  const returnOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const search = returnOrigin ? `?returnOrigin=${encodeURIComponent(returnOrigin)}` : "";
+  const response = await fetch(`${API_BASE}/api/email/oauth/url${search}`, { headers: authHeaders() });
+  return readJson<{
+    ok: boolean;
+    url: string;
+    redirectUri?: string;
+    returnOrigin?: string;
+    setupWarning?: string | null;
+  }>(response);
 }
 
 export async function disconnectGmail(accountId?: string) {
@@ -139,6 +147,19 @@ export async function disconnectGmail(accountId?: string) {
     body: JSON.stringify(accountId ? { accountId } : {}),
   });
   return readJson<{ ok: boolean; connected: boolean; accounts: import("./types").EmailAccount[] }>(response);
+}
+
+export async function setDefaultGmailAccount(accountId: string) {
+  const response = await fetch(`${API_BASE}/api/email/accounts/default`, {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ accountId }),
+  });
+  return readJson<{
+    ok: boolean;
+    account: import("./types").EmailAccount;
+    accounts: import("./types").EmailAccount[];
+  }>(response);
 }
 
 export async function saveEmailTemplate(body: {

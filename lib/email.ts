@@ -3,6 +3,8 @@ import type { Carrier, EmailDraft } from "./types";
 export const EMAIL_DRAFT_KEY = "cv-email-draft";
 export const EMAIL_OPEN_EVENT = "cv-open-email";
 export const EMAIL_TEMPLATES_EVENT = "cv-open-templates";
+export const EMAIL_GMAIL_EVENT = "cv-open-gmail";
+export const EMAIL_RECENT_EVENT = "cv-open-recent";
 
 export function applyEmailTemplate(text: string, vars: Record<string, string> = {}) {
   return String(text || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (full, key) => {
@@ -42,6 +44,14 @@ export function openComposeEmail(draft?: EmailDraft | null) {
 
 export function openTemplatesPage() {
   window.dispatchEvent(new Event(EMAIL_TEMPLATES_EVENT));
+}
+
+export function openGmailPage() {
+  window.dispatchEvent(new Event(EMAIL_GMAIL_EVENT));
+}
+
+export function openRecentSendsPage() {
+  window.dispatchEvent(new Event(EMAIL_RECENT_EVENT));
 }
 
 export function openCarrierEmail(carrier: Carrier, to?: string) {

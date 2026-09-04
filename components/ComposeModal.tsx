@@ -8,6 +8,7 @@ import type { EmailStatus, EmailTemplate } from "@/lib/types";
 type Props = {
   onClose: () => void;
   onOpenTemplates: () => void;
+  onOpenGmail?: () => void;
 };
 
 function pickTemplate(templates: EmailTemplate[], id?: string) {
@@ -36,7 +37,7 @@ function insertAtCursor(
   });
 }
 
-export function ComposeModal({ onClose, onOpenTemplates }: Props) {
+export function ComposeModal({ onClose, onOpenTemplates, onOpenGmail }: Props) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const toRef = useRef<HTMLInputElement | null>(null);
   const subjectRef = useRef<HTMLInputElement | null>(null);
@@ -211,10 +212,11 @@ export function ComposeModal({ onClose, onOpenTemplates }: Props) {
                       accounts.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.email}
+                          {item.isDefault ? " (default)" : ""}
                         </option>
                       ))
                     ) : (
-                      <option value="">Not connected</option>
+                      <option value="">0 accounts connected</option>
                     )}
                   </select>
                 </div>
@@ -303,12 +305,20 @@ export function ComposeModal({ onClose, onOpenTemplates }: Props) {
               </div>
               {!connected ? (
                 <p className="dat-hint">
-                  Connect Gmail on the Templates page before sending.{" "}
-                  <button type="button" className="dat-text-link" onClick={onOpenTemplates}>
-                    Open Templates
+                  {status?.setupWarning ||
+                    (accounts.length === 0
+                      ? "No Gmail accounts connected yet. Connect one or more on the Gmail page."
+                      : "Connect Gmail before sending.")}{" "}
+                  <button type="button" className="dat-text-link" onClick={onOpenGmail || onOpenTemplates}>
+                    Open Gmail
                   </button>
                 </p>
-              ) : null}
+              ) : (
+                <p className="dat-hint">
+                  Sending from {accounts.find((item) => item.id === accountId)?.email || "selected inbox"} ·{" "}
+                  {accounts.length} connected.
+                </p>
+              )}
             </div>
 
             <aside className="dat-compose-side">

@@ -10,6 +10,7 @@ type Props = {
   selectedCount: number;
   onClose: () => void;
   onOpenTemplates: () => void;
+  onOpenGmail?: () => void;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,9 +37,10 @@ function uniqueRecipients(carriers: Carrier[]) {
   return { recipients: list, skipped };
 }
 
-export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplates }: Props) {
+export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplates, onOpenGmail }: Props) {
   const [status, setStatus] = useState<EmailStatus | null>(null);
   const [templateId, setTemplateId] = useState("");
+  const [accountId, setAccountId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, sent: 0, failed: 0, skipped: 0 });
@@ -46,8 +48,9 @@ export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplat
   const [failures, setFailures] = useState<Array<{ to: string; error: string }>>([]);
 
   const pool = useMemo(() => uniqueRecipients(carriers), [carriers]);
+  const accounts = status?.accounts || [];
   const template = status?.templates.find((item) => item.id === templateId) || null;
-  const connected = Boolean(status?.connected && status.account);
+  const connected = Boolean(status?.connected && accounts.length);
   const preview = template
     ? {
         subject: applyEmailTemplate(template.subject, pool.recipients[0]?.vars || {}),
@@ -59,6 +62,8 @@ export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplat
     fetchEmailStatus()
       .then((next) => {
         setStatus(next);
+        const inbox = next.accounts.find((item) => item.isDefault) || next.accounts[0];
+        if (inbox) setAccountId(inbox.id);
         const fallback = next.templates.find((item) => item.isDefault) || next.templates[0];
         if (fallback) setTemplateId(fallback.id);
       })
@@ -90,7 +95,7 @@ export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplat
         const chunk = pool.recipients.slice(i, i + BATCH);
         const result = await sendBulkCarrierEmails({
           templateId,
-          accountId: status?.account?.id,
+          accountId: accountId || undefined,
           recipients: chunk.map((item) => ({ to: item.to, vars: item.vars })),
         });
         sent += result.sent.length;
@@ -159,22 +164,45 @@ export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplat
               : "No rows checked, so this sends to every carrier in the current list that has an email."}
           </p>
 
-          <div className="dat-field">
-            <label htmlFor="bulk-template">Template</label>
-            <select
-              id="bulk-template"
-              className="dat-input"
-              value={templateId}
-              disabled={busy}
-              onChange={(event) => setTemplateId(event.target.value)}
-            >
-              {(status?.templates || []).map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                  {item.isDefault ? " (default)" : ""}
-                </option>
-              ))}
-            </select>
+          <div className="dat-grid-2">
+            <div className="dat-field">
+              <label htmlFor="bulk-from">From inbox</label>
+              <select
+                id="bulk-from"
+                className="dat-input"
+                value={accountId}
+                disabled={busy}
+                onChange={(event) => setAccountId(event.target.value)}
+              >
+                {accounts.length ? (
+                  accounts.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.email}
+                      {item.isDefault ? " (default)" : ""}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">Not connected</option>
+                )}
+              </select>
+            </div>
+            <div className="dat-field">
+              <label htmlFor="bulk-template">Template</label>
+              <select
+                id="bulk-template"
+                className="dat-input"
+                value={templateId}
+                disabled={busy}
+                onChange={(event) => setTemplateId(event.target.value)}
+              >
+                {(status?.templates || []).map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                    {item.isDefault ? " (default)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {preview ? (
@@ -217,12 +245,16 @@ export function BulkEmailModal({ carriers, selectedCount, onClose, onOpenTemplat
 
           {!connected ? (
             <p className="dat-hint">
-              Connect Gmail on the Templates page first.{" "}
-              <button type="button" className="dat-text-link" onClick={onOpenTemplates}>
-                Open Templates
+              {status?.setupWarning || "Connect at least one Gmail account on the Gmail page first."}{" "}
+              <button type="button" className="dat-text-link" onClick={onOpenGmail || onOpenTemplates}>
+                Open Gmail
               </button>
             </p>
-          ) : null}
+          ) : (
+            <p className="dat-hint">
+              {accounts.length} Gmail {accounts.length === 1 ? "account" : "accounts"} available for this send.
+            </p>
+          )}
 
           <div className="dat-compose-actions">
             <button

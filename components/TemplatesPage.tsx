@@ -3,37 +3,94 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteEmailTemplate,
-  disconnectGmail,
   fetchEmailStatus,
-  fetchGmailConnectUrl,
-  fetchSentEmails,
   saveEmailTemplate,
 } from "@/lib/api";
-import { openComposeEmail } from "@/lib/email";
+import { applyEmailTemplate, openComposeEmail, openGmailPage } from "@/lib/email";
 import type { EmailStatus, EmailTemplate } from "@/lib/types";
 
 const EMPTY_TEMPLATE = { name: "", subject: "", body: "", isDefault: false };
+const MOBILE_MQ = "(max-width: 900px)";
 
-function formatSentAt(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-}
+const PREVIEW_VARS: Record<string, string> = {
+  company: "Apex Freight Lines",
+  legalName: "Apex Freight Lines LLC",
+  officer: "Mike",
+  mc: "123456",
+  dot: "987654",
+  phone: "(312) 555-0142",
+  email: "dispatch@apexfreight.example",
+  city: "Chicago",
+  state: "IL",
+  zip: "60601",
+  trucks: "24",
+  safety: "Satisfactory",
+  to: "dispatch@apexfreight.example",
+};
+
+type MobilePane = "list" | "edit";
 
 export function TemplatesPage() {
   const [status, setStatus] = useState<EmailStatus | null>(null);
-  const [sent, setSent] = useState<Array<{ id: string; to: string; subject: string; createdAt: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState("");
+  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState("");
   const [draft, setDraft] = useState(EMPTY_TEMPLATE);
+  const [showPreview, setShowPreview] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePane, setMobilePane] = useState<MobilePane>("list");
+  const [dirty, setDirty] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const subjectRef = useRef<HTMLInputElement | null>(null);
+  const lastField = useRef<"subject" | "body">("body");
+
+  useEffect(() => {
+    const mobile = window.matchMedia(MOBILE_MQ);
+    const desktopPreview = window.matchMedia("(min-width: 1101px)");
+
+    function sync() {
+      const mobileNow = mobile.matches;
+      setIsMobile(mobileNow);
+      setShowPreview(desktopPreview.matches);
+      if (!mobileNow) setMobilePane("list");
+    }
+
+    sync();
+    mobile.addEventListener("change", sync);
+    desktopPreview.addEventListener("change", sync);
+    return () => {
+      mobile.removeEventListener("change", sync);
+      desktopPreview.removeEventListener("change", sync);
+    };
+  }, []);
 
   const selected = useMemo(
     () => status?.templates.find((item) => item.id === selectedId) || null,
     [status, selectedId],
   );
+  const templates = status?.templates || [];
+  const accountCount = status?.accountCount ?? status?.accounts?.length ?? 0;
+  const isCreating = !selectedId;
+  const editorMode = isCreating ? "create" : "edit";
+
+  const previewSubject = applyEmailTemplate(draft.subject, PREVIEW_VARS);
+  const previewBody = applyEmailTemplate(draft.body, PREVIEW_VARS);
+
+  const statusLabel = busy === "save"
+    ? "Saving…"
+    : busy === "delete"
+      ? "Deleting…"
+      : busy === "dup"
+        ? "Copying…"
+        : dirty
+          ? "Unsaved changes"
+          : notice
+            ? "Saved"
+            : isCreating
+              ? "New draft"
+              : "Ready";
 
   function flash(message: string, isError = false) {
     if (isError) {
@@ -45,7 +102,12 @@ export function TemplatesPage() {
     }
   }
 
-  function selectTemplate(template: EmailTemplate) {
+  function patchDraft(patch: Partial<typeof EMPTY_TEMPLATE>) {
+    setDraft((current) => ({ ...current, ...patch }));
+    setDirty(true);
+  }
+
+  function selectTemplate(template: EmailTemplate, openEditor = false) {
     setSelectedId(template.id);
     setDraft({
       name: template.name,
@@ -53,12 +115,40 @@ export function TemplatesPage() {
       body: template.body,
       isDefault: template.isDefault,
     });
+    setDirty(false);
+    if (openEditor || isMobile) setMobilePane("edit");
+  }
+
+  function startNewTemplate() {
+    setSelectedId("");
+    setDraft(EMPTY_TEMPLATE);
+    setDirty(false);
+    setMobilePane("edit");
+  }
+
+  function backToList() {
+    if (dirty && !window.confirm("Discard unsaved changes?")) return;
+    setMobilePane("list");
+    if (dirty) {
+      const current = templates.find((item) => item.id === selectedId);
+      if (current) {
+        setDraft({
+          name: current.name,
+          subject: current.subject,
+          body: current.body,
+          isDefault: current.isDefault,
+        });
+      } else {
+        setDraft(EMPTY_TEMPLATE);
+        setSelectedId("");
+      }
+      setDirty(false);
+    }
   }
 
   async function reload() {
-    const [next, history] = await Promise.all([fetchEmailStatus(), fetchSentEmails()]);
+    const next = await fetchEmailStatus();
     setStatus(next);
-    setSent(history.sent);
     return next;
   }
 
@@ -66,9 +156,19 @@ export function TemplatesPage() {
     reload()
       .then((next) => {
         const template = next.templates.find((item) => item.isDefault) || next.templates[0];
-        if (template) selectTemplate(template);
+        if (template) {
+          setSelectedId(template.id);
+          setDraft({
+            name: template.name,
+            subject: template.subject,
+            body: template.body,
+            isDefault: template.isDefault,
+          });
+          setDirty(false);
+        }
       })
-      .catch((err) => flash(err instanceof Error ? err.message : "Unable to load templates", true));
+      .catch((err) => flash(err instanceof Error ? err.message : "Unable to load templates", true))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -80,30 +180,6 @@ export function TemplatesPage() {
     return () => window.clearTimeout(timer);
   }, [notice, error]);
 
-  async function connectGmail() {
-    setBusy("connect");
-    try {
-      const payload = await fetchGmailConnectUrl();
-      window.location.href = payload.url;
-    } catch (err) {
-      flash(err instanceof Error ? err.message : "Unable to start Gmail connect", true);
-      setBusy("");
-    }
-  }
-
-  async function disconnect() {
-    setBusy("disconnect");
-    try {
-      await disconnectGmail(status?.account?.id);
-      await reload();
-      flash("Gmail disconnected");
-    } catch (err) {
-      flash(err instanceof Error ? err.message : "Unable to disconnect", true);
-    } finally {
-      setBusy("");
-    }
-  }
-
   async function saveTemplate() {
     setBusy("save");
     try {
@@ -113,10 +189,40 @@ export function TemplatesPage() {
       });
       const next = await reload();
       const template = next.templates.find((item) => item.id === payload.template.id);
-      if (template) selectTemplate(template);
-      flash("Template saved");
+      if (template) {
+        setSelectedId(template.id);
+        setDraft({
+          name: template.name,
+          subject: template.subject,
+          body: template.body,
+          isDefault: template.isDefault,
+        });
+      }
+      setDirty(false);
+      flash(selectedId ? "Template saved" : "Template created");
+      if (isMobile) setMobilePane("list");
     } catch (err) {
       flash(err instanceof Error ? err.message : "Unable to save template", true);
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function duplicateTemplate(template: EmailTemplate) {
+    setBusy("dup");
+    try {
+      const payload = await saveEmailTemplate({
+        name: `${template.name} copy`,
+        subject: template.subject,
+        body: template.body,
+        isDefault: false,
+      });
+      const next = await reload();
+      const created = next.templates.find((item) => item.id === payload.template.id);
+      if (created) selectTemplate(created, true);
+      flash("Template duplicated");
+    } catch (err) {
+      flash(err instanceof Error ? err.message : "Unable to duplicate template", true);
     } finally {
       setBusy("");
     }
@@ -127,11 +233,23 @@ export function TemplatesPage() {
     setBusy("delete");
     try {
       await deleteEmailTemplate(template.id);
-      setSelectedId("");
-      setDraft(EMPTY_TEMPLATE);
       const next = await reload();
       const fallback = next.templates.find((item) => item.isDefault) || next.templates[0];
-      if (fallback) selectTemplate(fallback);
+      if (fallback) {
+        setSelectedId(fallback.id);
+        setDraft({
+          name: fallback.name,
+          subject: fallback.subject,
+          body: fallback.body,
+          isDefault: fallback.isDefault,
+        });
+      } else {
+        setSelectedId("");
+        setDraft(EMPTY_TEMPLATE);
+      }
+      setDirty(false);
+      flash("Template deleted");
+      if (isMobile) setMobilePane("list");
     } catch (err) {
       flash(err instanceof Error ? err.message : "Unable to delete template", true);
     } finally {
@@ -140,15 +258,28 @@ export function TemplatesPage() {
   }
 
   function insertToken(token: string) {
+    if (lastField.current === "subject" && subjectRef.current) {
+      const field = subjectRef.current;
+      const start = field.selectionStart ?? draft.subject.length;
+      const end = field.selectionEnd ?? start;
+      const next = `${draft.subject.slice(0, start)}${token}${draft.subject.slice(end)}`;
+      patchDraft({ subject: next });
+      window.requestAnimationFrame(() => {
+        field.focus();
+        const cursor = start + token.length;
+        field.setSelectionRange(cursor, cursor);
+      });
+      return;
+    }
     const field = bodyRef.current;
     if (!field) {
-      setDraft((current) => ({ ...current, body: `${current.body}${token}` }));
+      patchDraft({ body: `${draft.body}${token}` });
       return;
     }
     const start = field.selectionStart ?? draft.body.length;
     const end = field.selectionEnd ?? start;
     const next = `${draft.body.slice(0, start)}${token}${draft.body.slice(end)}`;
-    setDraft((current) => ({ ...current, body: next }));
+    patchDraft({ body: next });
     window.requestAnimationFrame(() => {
       field.focus();
       const cursor = start + token.length;
@@ -156,180 +287,253 @@ export function TemplatesPage() {
     });
   }
 
-  const account = status?.account;
-  const connected = Boolean(status?.connected && account);
+  if (loading) {
+    return (
+      <div className="mail-studio tpl-page">
+        <div className="tpl-state tpl-state-loading" aria-busy="true">
+          <span className="tpl-spinner" aria-hidden="true" />
+          <strong>Loading templates…</strong>
+          <p>Preparing your message library</p>
+        </div>
+      </div>
+    );
+  }
+
+  const showList = !isMobile || mobilePane === "list";
+  const showEditor = !isMobile || mobilePane === "edit";
 
   return (
-    <div className="workspace email-desk">
-      <div className="workspace-main">
-        <section className="search-card email-connect">
-          <div>
-            <p className="kicker">Mail</p>
-            <h2>Gmail & templates</h2>
-            <p>
-              {connected
-                ? `Connected as ${account?.displayName || account?.email}`
-                : "Connect Gmail, then build reusable carrier templates."}
-            </p>
-          </div>
-          <div className="email-connect-actions">
-            {connected ? <span className="status-pill is-ok">Connected</span> : <span className="status-pill is-wait">Not connected</span>}
-            {connected ? (
-              <button type="button" className="ghost" disabled={Boolean(busy)} onClick={() => void disconnect()}>
-                Disconnect
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => openComposeEmail()}
-            >
-              New message
+    <div className={`mail-studio tpl-page ${isMobile ? `is-mobile pane-${mobilePane}` : "is-desktop"}`}>
+      <header className="tpl-topbar">
+        <div className="tpl-topbar-copy">
+          {isMobile && mobilePane === "edit" ? (
+            <button type="button" className="tpl-back" onClick={backToList}>
+              ← Library
             </button>
-            <button
-              type="button"
-              className="primary"
-              disabled={Boolean(busy) || !status || status.oauthAvailable === false}
-              onClick={() => void connectGmail()}
-            >
-              {connected ? "Reconnect Gmail" : "Connect Gmail"}
-            </button>
-          </div>
-        </section>
+          ) : (
+            <p className="mail-eyebrow">Mail</p>
+          )}
+          <h2>{isMobile && mobilePane === "edit" ? (isCreating ? "New template" : "Edit template") : "Templates"}</h2>
+        </div>
+        <div className="tpl-status-row" aria-live="polite">
+          <span className={`tpl-chip ${dirty ? "is-warn" : busy ? "is-busy" : notice ? "is-ok" : ""}`}>
+            {statusLabel}
+          </span>
+          <span className="tpl-chip is-muted">{templates.length} templates</span>
+          <span className={`tpl-chip ${accountCount ? "is-ok" : "is-warn"}`}>
+            {accountCount ? `${accountCount} Gmail` : "No Gmail"}
+          </span>
+        </div>
+      </header>
 
-        {status && status.oauthAvailable === false ? (
-          <p className="banner warn" role="status">
-            Google OAuth is not configured on the API. Add this redirect URI in Google Cloud:{" "}
-            {status.redirectUri || "http://localhost:4000/api/email/oauth/callback"}
-          </p>
-        ) : null}
-        {error ? (
-          <p className="banner error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {notice ? <p className="banner">{notice}</p> : null}
+      {error ? (
+        <p className="banner error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {notice ? <p className="banner">{notice}</p> : null}
+      {!accountCount && showList ? (
+        <p className="banner warn" role="status">
+          Connect Gmail before sending.{" "}
+          <button type="button" className="dat-text-link" onClick={() => openGmailPage()}>
+            Open Gmail
+          </button>
+        </p>
+      ) : null}
 
-        <div className="email-grid">
-          <section className="search-card">
-            <div className="email-head">
-              <h2>Templates</h2>
-              <button
-                type="button"
-                className="text-btn"
-                onClick={() => {
-                  setSelectedId("");
-                  setDraft(EMPTY_TEMPLATE);
-                }}
-              >
+      <div className="mail-studio-body mail-studio-fill tpl-body">
+        {showList ? (
+          <aside className="mail-rail tpl-list" aria-label="Template library">
+            <div className="mail-rail-head">
+              <div>
+                <h3>Library</h3>
+                <p className="tpl-list-hint">Pick a template to edit</p>
+              </div>
+              <button type="button" className="primary tpl-new-btn" onClick={startNewTemplate}>
                 New
               </button>
             </div>
-            <div className="email-template-list">
-              {(status?.templates || []).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={item.id === selectedId ? "email-template is-on" : "email-template"}
-                  onClick={() => selectTemplate(item)}
-                >
-                  <strong>
-                    {item.name}
-                    {item.isDefault ? <span className="chip">Default</span> : null}
-                  </strong>
-                  <span>{item.subject}</span>
-                </button>
-              ))}
-            </div>
-          </section>
 
-          <section className="search-card">
-            <h2>{selectedId ? "Edit template" : "New template"}</h2>
-            <div className="field">
-              <label htmlFor="tpl-name">Name</label>
-              <input
-                id="tpl-name"
-                value={draft.name}
-                placeholder="Capacity check"
-                onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="tpl-subject">Subject</label>
-              <input
-                id="tpl-subject"
-                value={draft.subject}
-                placeholder="MC {{mc}} — truck available"
-                onChange={(event) => setDraft((current) => ({ ...current, subject: event.target.value }))}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="tpl-body">Body</label>
-              <textarea
-                id="tpl-body"
-                ref={bodyRef}
-                rows={10}
-                value={draft.body}
-                placeholder="Hi {{officer}}, …"
-                onChange={(event) => setDraft((current) => ({ ...current, body: event.target.value }))}
-              />
-            </div>
-            <p className="hint">Tap a field to insert it at the cursor.</p>
-            <div className="email-var-scroll">
-              <div className="chips">
-                {(status?.variables || []).map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className="chip button-chip"
-                    title={item.label}
-                    onClick={() => insertToken(item.token)}
+            {templates.length ? (
+              <div className="mail-rail-list tpl-list-scroll">
+                {templates.map((item) => (
+                  <div
+                    key={item.id}
+                    className={item.id === selectedId && !isMobile ? "mail-rail-item is-on" : "mail-rail-item"}
                   >
-                    {item.token}
-                  </button>
+                    <button type="button" className="mail-rail-main" onClick={() => selectTemplate(item, true)}>
+                      <strong>
+                        {item.name}
+                        {item.isDefault ? <span className="mail-badge">Default</span> : null}
+                      </strong>
+                      <span>{item.subject || "No subject"}</span>
+                    </button>
+                    <div className="tpl-list-actions">
+                      <button
+                        type="button"
+                        className="mail-rail-copy"
+                        title="Duplicate template"
+                        disabled={Boolean(busy)}
+                        onClick={() => void duplicateTemplate(item)}
+                      >
+                        Copy
+                      </button>
+                      {isMobile ? (
+                        <button type="button" className="mail-rail-copy" onClick={() => selectTemplate(item, true)}>
+                          Edit
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={draft.isDefault}
-                onChange={(event) => setDraft((current) => ({ ...current, isDefault: event.target.checked }))}
-              />
-              Default template
-            </label>
-            <div className="email-actions">
-              <button type="button" className="primary" disabled={Boolean(busy)} onClick={() => void saveTemplate()}>
-                {selectedId ? "Save template" : "Create template"}
-              </button>
-              {selected ? (
-                <button type="button" className="ghost" disabled={Boolean(busy)} onClick={() => void removeTemplate(selected)}>
-                  Delete
+            ) : (
+              <div className="tpl-state tpl-state-empty">
+                <strong>No templates yet</strong>
+                <p>Create your first carrier message template to get started.</p>
+                <button type="button" className="primary" onClick={startNewTemplate}>
+                  Create template
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => openComposeEmail()}
-              >
-                Use in message
-              </button>
-            </div>
-          </section>
-        </div>
+              </div>
+            )}
+          </aside>
+        ) : null}
 
-        {sent.length ? (
-          <section className="search-card email-sent">
-            <h3>Recent sends</h3>
-            <ul>
-              {sent.map((item) => (
-                <li key={item.id}>
-                  <strong>{item.to}</strong>
-                  <span>{item.subject}</span>
-                  <em>{formatSentAt(item.createdAt)}</em>
-                </li>
-              ))}
-            </ul>
+        {showEditor ? (
+          <section className="mail-editor tpl-editor" aria-label="Template editor" data-mode={editorMode}>
+            <div className="mail-editor-head">
+              <div>
+                <p className="mail-eyebrow">{isCreating ? "Creating" : "Editing"}</p>
+                <h3>{isCreating ? "New template" : draft.name || "Untitled template"}</h3>
+              </div>
+              {!isMobile ? (
+                <div className="mail-editor-toggles">
+                  <button
+                    type="button"
+                    className={showPreview ? "mail-toggle is-on" : "mail-toggle"}
+                    aria-pressed={showPreview}
+                    onClick={() => setShowPreview((value) => !value)}
+                  >
+                    Preview
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className={showPreview && !isMobile ? "mail-editor-grid has-preview" : "mail-editor-grid"}>
+              <div className="mail-editor-form">
+                <label className="mail-field">
+                  <span>Name</span>
+                  <input
+                    value={draft.name}
+                    placeholder="Capacity check"
+                    onChange={(event) => patchDraft({ name: event.target.value })}
+                  />
+                </label>
+                <label className="mail-field">
+                  <span>Subject</span>
+                  <input
+                    ref={subjectRef}
+                    value={draft.subject}
+                    placeholder="MC {{mc}} — truck available"
+                    onFocus={() => {
+                      lastField.current = "subject";
+                    }}
+                    onChange={(event) => patchDraft({ subject: event.target.value })}
+                  />
+                </label>
+                <label className="mail-field mail-field-body">
+                  <span>Body</span>
+                  <textarea
+                    ref={bodyRef}
+                    rows={isMobile ? 8 : 12}
+                    value={draft.body}
+                    placeholder={"Hi {{officer}},\n\nReaching out about {{company}} (MC {{mc}})…"}
+                    onFocus={() => {
+                      lastField.current = "body";
+                    }}
+                    onChange={(event) => patchDraft({ body: event.target.value })}
+                  />
+                </label>
+
+                <div className="mail-tokens">
+                  <div className="mail-tokens-head">
+                    <strong>Insert fields</strong>
+                    <span>Tap to insert</span>
+                  </div>
+                  <div className="mail-token-row">
+                    {(status?.variables || []).map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        className="mail-token"
+                        title={item.label}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => insertToken(item.token)}
+                      >
+                        {item.token}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mail-editor-foot">
+                  <label className="mail-check">
+                    <input
+                      type="checkbox"
+                      checked={draft.isDefault}
+                      onChange={(event) => patchDraft({ isDefault: event.target.checked })}
+                    />
+                    Default template
+                  </label>
+                  <div className="mail-editor-actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={Boolean(busy) || !draft.name.trim() || !draft.subject.trim() || !draft.body.trim()}
+                      onClick={() => void saveTemplate()}
+                    >
+                      {busy === "save" ? "Saving…" : isCreating ? "Create" : "Save"}
+                    </button>
+                    {!isMobile ? (
+                      <button type="button" className="ghost" onClick={() => openComposeEmail()}>
+                        Compose
+                      </button>
+                    ) : null}
+                    {selected ? (
+                      <button
+                        type="button"
+                        className="ghost danger-ghost"
+                        disabled={Boolean(busy)}
+                        onClick={() => void removeTemplate(selected)}
+                      >
+                        Delete
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {showPreview && !isMobile ? (
+                <aside className="mail-preview" aria-label="Template preview">
+                  <div className="mail-preview-head">
+                    <strong>Preview</strong>
+                    <span>Sample fill</span>
+                  </div>
+                  <div className="mail-preview-card">
+                    <div className="mail-preview-meta">
+                      <span>To</span>
+                      <em>{PREVIEW_VARS.email}</em>
+                    </div>
+                    <div className="mail-preview-meta">
+                      <span>Subject</span>
+                      <em>{previewSubject || "(no subject)"}</em>
+                    </div>
+                    <pre className="mail-preview-body">{previewBody || "Preview appears as you type."}</pre>
+                  </div>
+                </aside>
+              ) : null}
+            </div>
           </section>
         ) : null}
       </div>

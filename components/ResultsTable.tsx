@@ -5,7 +5,7 @@ import { fetchCarrierSnapshot } from "@/lib/api";
 import type { Carrier, QcSnapshot } from "@/lib/types";
 import { CarrierProfile } from "./CarrierProfile";
 import { BulkEmailModal } from "./BulkEmailModal";
-import { openTemplatesPage } from "@/lib/email";
+import { openGmailPage, openTemplatesPage } from "@/lib/email";
 
 type Props = {
   carriers: Carrier[];
@@ -565,6 +565,10 @@ export function ResultsTable({ carriers, truncated, onClear }: Props) {
           onOpenTemplates={() => {
             setBulkOpen(false);
             openTemplatesPage();
+          }}
+          onOpenGmail={() => {
+            setBulkOpen(false);
+            openGmailPage();
           }}
         />
       ) : null}

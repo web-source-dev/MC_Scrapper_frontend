@@ -5,11 +5,26 @@ import { AuthProvider, useAuth } from "./AuthProvider";
 import { LoginScreen } from "./LoginScreen";
 import { SearchTool } from "./SearchTool";
 import { TemplatesPage } from "./TemplatesPage";
+import { GmailPage } from "./GmailPage";
+import { RecentSendsPage } from "./RecentSendsPage";
 import { ComposeModal } from "./ComposeModal";
 import { BrandMark } from "./BrandMark";
-import { EMAIL_OPEN_EVENT, EMAIL_TEMPLATES_EVENT } from "@/lib/email";
-import { loadDeskPage, saveDeskPage } from "@/lib/searchCache";
+import {
+  EMAIL_GMAIL_EVENT,
+  EMAIL_OPEN_EVENT,
+  EMAIL_RECENT_EVENT,
+  EMAIL_TEMPLATES_EVENT,
+} from "@/lib/email";
+import { loadDeskPage, saveDeskPage, type DeskPage } from "@/lib/searchCache";
+import { fetchEmailStatus } from "@/lib/api";
 import type { AuthUser } from "@/lib/session";
+
+const PAGE_TITLES: Record<DeskPage, string> = {
+  search: "Search",
+  templates: "Templates",
+  gmail: "Gmail",
+  recent: "Recent",
+};
 
 function QuotaMeter({ user, compact = false }: { user: AuthUser; compact?: boolean }) {
   const used = user.usedToday ?? 0;
@@ -38,12 +53,12 @@ function QuotaMeter({ user, compact = false }: { user: AuthUser; compact?: boole
 
 function Desk() {
   const { ready, user, logout } = useAuth();
-  const [page, setPage] = useState<"search" | "templates">("search");
+  const [page, setPage] = useState<DeskPage>("search");
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeKey, setComposeKey] = useState(0);
   const [mailNotice, setMailNotice] = useState<{ text: string; error: boolean } | null>(null);
 
-  function go(next: "search" | "templates") {
+  function go(next: DeskPage) {
     setPage(next);
     saveDeskPage(next);
   }
@@ -51,12 +66,49 @@ function Desk() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const gmail = params.get("gmail");
-    const requested = params.get("page") === "templates" || gmail ? "templates" : loadDeskPage();
+    const pageParam = params.get("page");
+    const requested: DeskPage =
+      gmail || pageParam === "gmail"
+        ? "gmail"
+        : pageParam === "templates" || pageParam === "recent" || pageParam === "search"
+          ? pageParam
+          : loadDeskPage();
     setPage(requested);
     saveDeskPage(requested);
-    if (gmail === "ok") setMailNotice({ text: `Connected ${params.get("email") || "Gmail"}`, error: false });
+
+    if (gmail === "ok") {
+      const email = params.get("email") || "Gmail";
+      window.sessionStorage.setItem("cv-gmail-just-connected", email);
+      setMailNotice({ text: `Finishing Gmail connect for ${email}…`, error: false });
+      void fetchEmailStatus()
+        .then((status) => {
+          const count = status.accountCount ?? status.accounts.length;
+          if (count > 0) {
+            setMailNotice({
+              text:
+                count === 1
+                  ? `Connected ${status.account?.email || email}`
+                  : `${count} Gmail accounts connected · latest ${email}`,
+              error: false,
+            });
+          } else {
+            setMailNotice({
+              text:
+                status.setupWarning ||
+                "Google finished, but this API has 0 accounts. Check GOOGLE_OAUTH_REDIRECT_URI matches this backend.",
+              error: true,
+            });
+          }
+        })
+        .catch((err) => {
+          setMailNotice({
+            text: err instanceof Error ? err.message : "Unable to verify Gmail connection",
+            error: true,
+          });
+        });
+    }
     if (gmail === "error") setMailNotice({ text: params.get("message") || "Gmail connect failed", error: true });
-    if (gmail || params.get("page")) window.history.replaceState({}, "", window.location.pathname);
+    if (gmail || pageParam) window.history.replaceState({}, "", window.location.pathname);
 
     function openCompose() {
       setComposeKey((value) => value + 1);
@@ -66,11 +118,23 @@ function Desk() {
       setComposeOpen(false);
       go("templates");
     }
+    function openGmail() {
+      setComposeOpen(false);
+      go("gmail");
+    }
+    function openRecent() {
+      setComposeOpen(false);
+      go("recent");
+    }
     window.addEventListener(EMAIL_OPEN_EVENT, openCompose);
     window.addEventListener(EMAIL_TEMPLATES_EVENT, openTemplates);
+    window.addEventListener(EMAIL_GMAIL_EVENT, openGmail);
+    window.addEventListener(EMAIL_RECENT_EVENT, openRecent);
     return () => {
       window.removeEventListener(EMAIL_OPEN_EVENT, openCompose);
       window.removeEventListener(EMAIL_TEMPLATES_EVENT, openTemplates);
+      window.removeEventListener(EMAIL_GMAIL_EVENT, openGmail);
+      window.removeEventListener(EMAIL_RECENT_EVENT, openRecent);
     };
   }, []);
 
@@ -117,6 +181,20 @@ function Desk() {
             </svg>
             Templates
           </button>
+          <button type="button" className={page === "gmail" ? "is-on" : undefined} onClick={() => go("gmail")}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M3 7l9 7 9-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            </svg>
+            Gmail
+          </button>
+          <button type="button" className={page === "recent" ? "is-on" : undefined} onClick={() => go("recent")}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 8v4.5l3 1.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            Recent
+          </button>
         </nav>
         <div className="sidebar-foot">
           <p className="session-user" title={user.email}>
@@ -133,7 +211,7 @@ function Desk() {
           <div className="topbar">
             <div className="mobile-brand">
               <BrandMark variant="icon" className="on-dark" alt="" />
-              <p className="page-title">{page === "templates" ? "Templates" : "Search"}</p>
+              <p className="page-title">{PAGE_TITLES[page]}</p>
             </div>
             <div className="header-tools">
               <QuotaMeter user={user} />
@@ -156,6 +234,8 @@ function Desk() {
             <SearchTool />
           </div>
           {page === "templates" ? <TemplatesPage /> : null}
+          {page === "gmail" ? <GmailPage /> : null}
+          {page === "recent" ? <RecentSendsPage /> : null}
         </main>
       </div>
 
@@ -166,6 +246,10 @@ function Desk() {
           onOpenTemplates={() => {
             setComposeOpen(false);
             go("templates");
+          }}
+          onOpenGmail={() => {
+            setComposeOpen(false);
+            go("gmail");
           }}
         />
       ) : null}

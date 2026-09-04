@@ -124,7 +124,9 @@ export async function clearSearchSession() {
   }
 }
 
-export function saveDeskPage(page: "search" | "templates") {
+export type DeskPage = "search" | "templates" | "gmail" | "recent";
+
+export function saveDeskPage(page: DeskPage) {
   try {
     window.sessionStorage.setItem(SEARCH_PAGE_KEY, page);
   } catch {
@@ -132,9 +134,13 @@ export function saveDeskPage(page: "search" | "templates") {
   }
 }
 
-export function loadDeskPage(): "search" | "templates" {
+export function loadDeskPage(): DeskPage {
   try {
-    return window.sessionStorage.getItem(SEARCH_PAGE_KEY) === "templates" ? "templates" : "search";
+    const value = window.sessionStorage.getItem(SEARCH_PAGE_KEY);
+    if (value === "templates" || value === "gmail" || value === "recent" || value === "search") {
+      return value;
+    }
+    return "search";
   } catch {
     return "search";
   }
