@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { FilterMenuPortal, useIsMobileFilter } from "@/lib/filterMenuPortal";
+import { MobileFilterSheet, useIsMobileFilter } from "@/lib/filterMenuPortal";
 
 export type MultiSelectOption = {
   id: string;
@@ -49,6 +49,7 @@ export function MultiSelectChip({
   }, [options, query]);
 
   useEffect(() => {
+    if (isMobile) return;
     function handleClick(event: MouseEvent) {
       const target = event.target as Node;
       if (rootRef.current?.contains(target)) return;
@@ -64,20 +65,11 @@ export function MultiSelectChip({
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleKey);
     };
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!open) setQuery("");
   }, [open]);
-
-  useEffect(() => {
-    if (!open || !isMobile) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open, isMobile]);
 
   function toggle(id: string) {
     if (selected.includes(id)) {
@@ -89,30 +81,8 @@ export function MultiSelectChip({
     onChange([...selected.filter((value) => value !== blocked), id]);
   }
 
-  const menuClass = [
-    "filter-chip-menu",
-    grid ? "is-wide" : "",
-    isMobile ? "is-mobile-sheet" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const menu = (
-    <div
-      className={menuClass}
-      id={listId}
-      role="listbox"
-      aria-multiselectable="true"
-      ref={menuRef}
-    >
-      {isMobile ? (
-        <div className="filter-chip-menu-head">
-          <strong>{label}</strong>
-          <button type="button" className="text-btn filter-chip-menu-done" onClick={() => setOpen(false)}>
-            Done
-          </button>
-        </div>
-      ) : null}
+  const optionsList = (
+    <>
       {searchable ? (
         <input
           className="filter-chip-search"
@@ -138,7 +108,7 @@ export function MultiSelectChip({
           </label>
         ))}
       </div>
-    </div>
+    </>
   );
 
   return (
@@ -156,18 +126,27 @@ export function MultiSelectChip({
           <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" />
         </svg>
       </button>
-      {open && isMobile ? (
-        <FilterMenuPortal open={open}>
-          <button
-            type="button"
-            className="filter-chip-backdrop"
-            aria-label="Close filter menu"
-            onClick={() => setOpen(false)}
-          />
-          {menu}
-        </FilterMenuPortal>
+      {isMobile ? (
+        <MobileFilterSheet
+          open={open}
+          title={label}
+          onClose={() => setOpen(false)}
+          menuRef={menuRef}
+          menuId={listId}
+          multi
+        >
+          {optionsList}
+        </MobileFilterSheet>
       ) : open ? (
-        menu
+        <div
+          className={grid ? "filter-chip-menu is-wide" : "filter-chip-menu"}
+          id={listId}
+          role="listbox"
+          aria-multiselectable="true"
+          ref={menuRef}
+        >
+          {optionsList}
+        </div>
       ) : null}
     </div>
   );

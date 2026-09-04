@@ -215,8 +215,9 @@ export function SearchTool() {
           ) : null}
 
           {loading ? (
-            <p className="banner" role="status">
-              Searching… current results stay until this finishes or you clear.
+            <p className="banner banner-compact" role="status">
+              <span className="banner-text-full">Searching… current results stay until this finishes or you clear.</span>
+              <span className="banner-text-short">Searching…</span>
             </p>
           ) : null}
 

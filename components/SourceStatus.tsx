@@ -14,10 +14,13 @@ export function SourceStatus() {
   }, []);
 
   const live = Boolean(meta?.qcMobile && meta.qcProxy?.enabled);
+  const full = live ? "Live data" : meta ? "Census only" : "Connecting";
+  const short = live ? "Live" : meta ? "Census" : "…";
 
   return (
-    <span className={`status-pill ${live ? "is-live" : meta ? "is-warn" : "is-wait"}`}>
-      {live ? "Live data" : meta ? "Census only" : "Connecting"}
+    <span className={`status-pill ${live ? "is-live" : meta ? "is-warn" : "is-wait"}`} title={full}>
+      <span className="status-pill-label-full">{full}</span>
+      <span className="status-pill-label-short">{short}</span>
     </span>
   );
 }

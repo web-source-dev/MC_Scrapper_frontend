@@ -274,19 +274,21 @@ export function TemplatesPage() {
                 onChange={(event) => setDraft((current) => ({ ...current, body: event.target.value }))}
               />
             </div>
-            <p className="hint">Click a field to insert it at the cursor.</p>
-            <div className="chips">
-              {(status?.variables || []).map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className="chip button-chip"
-                  title={item.label}
-                  onClick={() => insertToken(item.token)}
-                >
-                  {item.token}
-                </button>
-              ))}
+            <p className="hint">Tap a field to insert it at the cursor.</p>
+            <div className="email-var-scroll">
+              <div className="chips">
+                {(status?.variables || []).map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="chip button-chip"
+                    title={item.label}
+                    onClick={() => insertToken(item.token)}
+                  >
+                    {item.token}
+                  </button>
+                ))}
+              </div>
             </div>
             <label className="check">
               <input
