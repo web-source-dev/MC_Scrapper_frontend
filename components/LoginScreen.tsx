@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useAuth } from "./AuthProvider";
+import { BrandMark } from "./BrandMark";
 
 export function LoginScreen() {
   const { login, notice } = useAuth();
@@ -28,17 +29,16 @@ export function LoginScreen() {
       <header className="app-header">
         <div className="topbar">
           <div className="brand">
-            <span className="mark" aria-hidden="true">
-              MC
-            </span>
-            <h1>Carrier Verifier</h1>
+            <BrandMark className="on-dark" />
           </div>
         </div>
       </header>
       <main className="login-main">
         <form className="login-card" onSubmit={onSubmit}>
-          <p className="login-kicker">Dispatcher desk</p>
-          <h2>Sign in</h2>
+          <div className="login-brand-block">
+            <BrandMark alt="MC Finder" />
+            <h2>Sign in</h2>
+          </div>
           <p className="hint">One device at a time. A new sign-in closes the other session.</p>
           {notice ? (
             <p className="banner error" role="status">

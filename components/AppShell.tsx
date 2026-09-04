@@ -6,7 +6,7 @@ import { LoginScreen } from "./LoginScreen";
 import { SearchTool } from "./SearchTool";
 import { TemplatesPage } from "./TemplatesPage";
 import { ComposeModal } from "./ComposeModal";
-import { SourceStatus } from "./SourceStatus";
+import { BrandMark } from "./BrandMark";
 import { EMAIL_OPEN_EVENT, EMAIL_TEMPLATES_EVENT } from "@/lib/email";
 import { loadDeskPage, saveDeskPage } from "@/lib/searchCache";
 import type { AuthUser } from "@/lib/session";
@@ -80,10 +80,7 @@ function Desk() {
         <header className="app-header">
           <div className="topbar">
             <div className="brand">
-              <span className="mark" aria-hidden="true">
-                MC
-              </span>
-              <h1>Carrier Verifier</h1>
+              <BrandMark className="on-dark" />
             </div>
           </div>
         </header>
@@ -103,13 +100,7 @@ function Desk() {
       </a>
       <aside className="app-sidebar" aria-label="Desk pages">
         <div className="sidebar-brand">
-          <span className="mark" aria-hidden="true">
-            MC
-          </span>
-          <div>
-            <p className="eyebrow">Dispatcher</p>
-            <h1>Carrier Verifier</h1>
-          </div>
+          <BrandMark className="on-dark brand-mark-sidebar" />
         </div>
         <nav className="sidebar-nav">
           <button type="button" className={page === "search" ? "is-on" : undefined} onClick={() => go("search")}>
@@ -141,13 +132,10 @@ function Desk() {
         <header className="app-header">
           <div className="topbar">
             <div className="mobile-brand">
-              <span className="mark" aria-hidden="true">
-                MC
-              </span>
+              <BrandMark variant="icon" className="on-dark" alt="" />
               <p className="page-title">{page === "templates" ? "Templates" : "Search"}</p>
             </div>
             <div className="header-tools">
-              <SourceStatus />
               <QuotaMeter user={user} />
               <QuotaMeter user={user} compact />
               <div className="mobile-session">
