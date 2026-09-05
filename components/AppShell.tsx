@@ -172,7 +172,7 @@ function Desk() {
   if (!user) return <LoginScreen />;
 
   return (
-    <div className="app-frame">
+    <div className={`app-frame${MAIL_UI_ENABLED ? "" : " is-search-only"}`}>
       <a className="skip-link" href="#main">
         Skip to main content
       </a>

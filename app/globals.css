@@ -3120,6 +3120,14 @@ td.mono {
     overflow-x: hidden;
   }
 
+  .app-frame.is-search-only {
+    padding-bottom: 0;
+  }
+
+  .app-frame.is-search-only .app-sidebar {
+    display: none;
+  }
+
   .app-content {
     min-width: 0;
     overflow-x: hidden;
