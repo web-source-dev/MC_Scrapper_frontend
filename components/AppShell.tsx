@@ -14,6 +14,7 @@ import {
   EMAIL_OPEN_EVENT,
   EMAIL_RECENT_EVENT,
   EMAIL_TEMPLATES_EVENT,
+  MAIL_UI_ENABLED,
 } from "@/lib/email";
 import { loadDeskPage, saveDeskPage, type DeskPage } from "@/lib/searchCache";
 import { fetchEmailStatus } from "@/lib/api";
@@ -59,6 +60,11 @@ function Desk() {
   const [mailNotice, setMailNotice] = useState<{ text: string; error: boolean } | null>(null);
 
   function go(next: DeskPage) {
+    if (!MAIL_UI_ENABLED && next !== "search") {
+      setPage("search");
+      saveDeskPage("search");
+      return;
+    }
     setPage(next);
     saveDeskPage(next);
   }
@@ -67,6 +73,14 @@ function Desk() {
     const params = new URLSearchParams(window.location.search);
     const gmail = params.get("gmail");
     const pageParam = params.get("page");
+
+    if (!MAIL_UI_ENABLED) {
+      setPage("search");
+      saveDeskPage("search");
+      if (gmail || pageParam) window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+
     const requested: DeskPage =
       gmail || pageParam === "gmail"
         ? "gmail"
@@ -174,27 +188,31 @@ function Desk() {
             </svg>
             Search
           </button>
-          <button type="button" className={page === "templates" ? "is-on" : undefined} onClick={() => go("templates")}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M4 8l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-            </svg>
-            Templates
-          </button>
-          <button type="button" className={page === "gmail" ? "is-on" : undefined} onClick={() => go("gmail")}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M3 7l9 7 9-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-            </svg>
-            Gmail
-          </button>
-          <button type="button" className={page === "recent" ? "is-on" : undefined} onClick={() => go("recent")}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M12 8v4.5l3 1.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            Recent
-          </button>
+          {MAIL_UI_ENABLED ? (
+            <>
+              <button type="button" className={page === "templates" ? "is-on" : undefined} onClick={() => go("templates")}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M4 8l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                </svg>
+                Templates
+              </button>
+              <button type="button" className={page === "gmail" ? "is-on" : undefined} onClick={() => go("gmail")}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M3 7l9 7 9-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                </svg>
+                Gmail
+              </button>
+              <button type="button" className={page === "recent" ? "is-on" : undefined} onClick={() => go("recent")}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M12 8v4.5l3 1.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                Recent
+              </button>
+            </>
+          ) : null}
         </nav>
         <div className="sidebar-foot">
           <p className="session-user" title={user.email}>
@@ -225,7 +243,7 @@ function Desk() {
           </div>
         </header>
         <main id="main">
-          {mailNotice ? (
+          {MAIL_UI_ENABLED && mailNotice ? (
             <p className={`banner ${mailNotice.error ? "error" : ""}`} role={mailNotice.error ? "alert" : "status"}>
               {mailNotice.text}
             </p>
@@ -233,13 +251,13 @@ function Desk() {
           <div hidden={page !== "search"}>
             <SearchTool />
           </div>
-          {page === "templates" ? <TemplatesPage /> : null}
-          {page === "gmail" ? <GmailPage /> : null}
-          {page === "recent" ? <RecentSendsPage /> : null}
+          {MAIL_UI_ENABLED && page === "templates" ? <TemplatesPage /> : null}
+          {MAIL_UI_ENABLED && page === "gmail" ? <GmailPage /> : null}
+          {MAIL_UI_ENABLED && page === "recent" ? <RecentSendsPage /> : null}
         </main>
       </div>
 
-      {composeOpen ? (
+      {MAIL_UI_ENABLED && composeOpen ? (
         <ComposeModal
           key={composeKey}
           onClose={() => setComposeOpen(false)}

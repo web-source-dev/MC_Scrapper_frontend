@@ -2,7 +2,7 @@
 
 import { useState, type MouseEvent } from "react";
 import { decideDispatch } from "@/lib/dispatchDecision";
-import { openCarrierEmail } from "@/lib/email";
+import { MAIL_UI_ENABLED, openCarrierEmail } from "@/lib/email";
 import type { Carrier, QcSnapshot } from "@/lib/types";
 
 type Props = {
@@ -42,9 +42,11 @@ export function CarrierBrief({ carrier, snapshot, snapshotLoading }: Props) {
               {decision.verdict === "pass" ? `Call anyway ${decision.phone}` : `Call ${decision.phone}`}
             </a>
           ) : null}
-          <button type="button" className="ghost dispatch-call" onClick={openEmail}>
-            {carrier.email ? "Email" : "Email…"}
-          </button>
+          {MAIL_UI_ENABLED ? (
+            <button type="button" className="ghost dispatch-call" onClick={openEmail}>
+              {carrier.email ? "Email" : "Email…"}
+            </button>
+          ) : null}
         </div>
       </div>
       {rest.length ? <p className="dispatch-more">{rest.join(" ")}</p> : null}

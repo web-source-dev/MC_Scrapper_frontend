@@ -1,5 +1,8 @@
 import type { Carrier, EmailDraft } from "./types";
 
+/** Set true to restore Templates / Gmail / Recent / compose UI. Backend stays live either way. */
+export const MAIL_UI_ENABLED = false;
+
 export const EMAIL_DRAFT_KEY = "cv-email-draft";
 export const EMAIL_OPEN_EVENT = "cv-open-email";
 export const EMAIL_TEMPLATES_EVENT = "cv-open-templates";
@@ -34,6 +37,7 @@ export function carrierEmailVars(carrier: Carrier, to = ""): Record<string, stri
 }
 
 export function openComposeEmail(draft?: EmailDraft | null) {
+  if (!MAIL_UI_ENABLED) return;
   if (draft) {
     window.sessionStorage.setItem(EMAIL_DRAFT_KEY, JSON.stringify(draft));
   } else {
@@ -43,18 +47,22 @@ export function openComposeEmail(draft?: EmailDraft | null) {
 }
 
 export function openTemplatesPage() {
+  if (!MAIL_UI_ENABLED) return;
   window.dispatchEvent(new Event(EMAIL_TEMPLATES_EVENT));
 }
 
 export function openGmailPage() {
+  if (!MAIL_UI_ENABLED) return;
   window.dispatchEvent(new Event(EMAIL_GMAIL_EVENT));
 }
 
 export function openRecentSendsPage() {
+  if (!MAIL_UI_ENABLED) return;
   window.dispatchEvent(new Event(EMAIL_RECENT_EVENT));
 }
 
 export function openCarrierEmail(carrier: Carrier, to?: string) {
+  if (!MAIL_UI_ENABLED) return;
   const recipient = String(to || carrier.email || "").trim();
   openComposeEmail({ to: recipient, vars: carrierEmailVars(carrier, recipient) });
 }

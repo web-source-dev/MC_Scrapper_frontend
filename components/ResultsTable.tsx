@@ -5,7 +5,7 @@ import { fetchCarrierSnapshot } from "@/lib/api";
 import type { Carrier, QcSnapshot } from "@/lib/types";
 import { CarrierProfile } from "./CarrierProfile";
 import { BulkEmailModal } from "./BulkEmailModal";
-import { openGmailPage, openTemplatesPage } from "@/lib/email";
+import { MAIL_UI_ENABLED, openGmailPage, openTemplatesPage } from "@/lib/email";
 
 type Props = {
   carriers: Carrier[];
@@ -337,10 +337,12 @@ export function ResultsTable({ carriers, truncated, onClear }: Props) {
               <option value="email">Emails</option>
             </select>
           </label>
-          <button type="button" className="ghost toolbar-btn" onClick={() => setBulkOpen(true)}>
-            <span className="toolbar-btn-full">Bulk email</span>
-            <span className="toolbar-btn-short">Email</span>
-          </button>
+          {MAIL_UI_ENABLED ? (
+            <button type="button" className="ghost toolbar-btn" onClick={() => setBulkOpen(true)}>
+              <span className="toolbar-btn-full">Bulk email</span>
+              <span className="toolbar-btn-short">Email</span>
+            </button>
+          ) : null}
           <button type="button" className="ghost toolbar-btn" onClick={downloadCsv}>
             Export
           </button>
@@ -557,7 +559,7 @@ export function ResultsTable({ carriers, truncated, onClear }: Props) {
           </button>
         </div>
       </div>
-      {bulkOpen ? (
+      {MAIL_UI_ENABLED && bulkOpen ? (
         <BulkEmailModal
           carriers={workingSet}
           selectedCount={selectedRows.length}

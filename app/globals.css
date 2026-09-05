@@ -1611,6 +1611,8 @@ main {
 
 .search-advanced {
   order: 3;
+  display: grid;
+  gap: 8px;
 }
 
 .search-filters-toggle {
@@ -1642,23 +1644,40 @@ main {
   transform: rotate(180deg);
 }
 
-.search-advanced {
-  border: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.search-advanced > summary {
+.search-advanced-toggle {
   display: none;
-  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.search-advanced > summary::-webkit-details-marker {
-  display: none;
+.search-advanced-toggle svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  transition: transform 0.15s ease;
+}
+
+.search-advanced-toggle.is-open svg {
+  transform: rotate(180deg);
 }
 
 .search-row-advanced {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: end;
   padding-top: 2px;
 }
 
@@ -1845,10 +1864,11 @@ main {
 
   .search-advanced {
     order: 2;
-    display: contents;
+    display: grid;
+    gap: 8px;
   }
 
-  .search-advanced > summary {
+  .search-advanced-toggle {
     display: none;
   }
 
@@ -3320,24 +3340,19 @@ td.mono {
     height: 40px;
   }
 
-  .search-advanced > summary {
+  .search-advanced-toggle {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 34px;
-    padding: 0 10px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--paper-2);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--ink);
   }
 
   .search-row-advanced {
-    display: grid;
+    display: none;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    padding-top: 0;
+  }
+
+  .search-row-advanced.is-open {
+    display: grid;
     padding-top: 8px;
   }
 
@@ -3836,8 +3851,7 @@ td.mono {
     min-height: 36px;
   }
 
-  .search-row-advanced {
-    display: grid;
+  .search-row-advanced.is-open {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }

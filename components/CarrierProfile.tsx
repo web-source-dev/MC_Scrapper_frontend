@@ -5,7 +5,7 @@ import type { Carrier, CarrierAddress, QcSnapshot, UnitCounts } from "@/lib/type
 import { CarrierBrief } from "./CarrierBrief";
 import { CarrierReviews } from "./CarrierReviews";
 import { CopyValue } from "./CopyValue";
-import { openCarrierEmail } from "@/lib/email";
+import { MAIL_UI_ENABLED, openCarrierEmail } from "@/lib/email";
 
 type Props = {
   carrier: Carrier;
@@ -387,9 +387,11 @@ export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
                     href={carrier.email ? `mailto:${carrier.email}` : undefined}
                     compact
                   />
-                  <button type="button" className="text-btn" onClick={() => openCarrierEmail(carrier)}>
-                    Send
-                  </button>
+                  {MAIL_UI_ENABLED ? (
+                    <button type="button" className="text-btn" onClick={() => openCarrierEmail(carrier)}>
+                      Send
+                    </button>
+                  ) : null}
                 </div>
               </Field>
             </dl>

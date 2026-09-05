@@ -69,6 +69,7 @@ function countActiveFilters(form: SearchFormState) {
 
 export function SearchForm({ meta, form, loading, remaining, clockBlocked, onChange, onSubmit }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const mode = form.searchMode;
   const showStateFilter = mode !== "location";
   const fleets = meta.fleetPresets?.length ? meta.fleetPresets : FALLBACK_FLEETS;
@@ -376,9 +377,19 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
         <div className="search-filters-desktop">{filterChipsDesktop}</div>
       </div>
 
-      <details className="search-advanced">
-        <summary>More options</summary>
-        <div className="search-row search-row-advanced">
+      <div className="search-advanced">
+        <button
+          type="button"
+          className={`search-advanced-toggle ${advancedOpen ? "is-open" : ""}`}
+          aria-expanded={advancedOpen}
+          onClick={() => setAdvancedOpen((open) => !open)}
+        >
+          <span>More options</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className={`search-row search-row-advanced ${advancedOpen ? "is-open" : ""}`}>
           {mode !== "location" && showStateFilter ? (
             <>
               <div className="field">
@@ -448,7 +459,7 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
             />
           </div>
         </div>
-      </details>
+      </div>
     </form>
   );
 }
