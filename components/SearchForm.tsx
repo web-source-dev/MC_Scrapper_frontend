@@ -222,7 +222,7 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
       {clockBlocked ? (
         <p className="quota-hint">Search is locked until this computer’s day and date are correct.</p>
       ) : remaining != null ? (
-        <p className="quota-hint">{remaining.toLocaleString()} MCs left today</p>
+        <p className="quota-hint">{remaining.toLocaleString()} MCs available (day & month caps)</p>
       ) : null}
     </>
   );

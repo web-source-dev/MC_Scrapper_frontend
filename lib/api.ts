@@ -33,6 +33,33 @@ export async function login(email: string, password: string) {
   return payload.user;
 }
 
+export async function signup(input: {
+  name: string;
+  company: string;
+  phone: string;
+  jobTitle: string;
+  email: string;
+  password: string;
+}) {
+  const response = await fetch(`${API_BASE}/api/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const payload = await readJson<{ ok: boolean; token: string; user: AuthUser }>(response);
+  setToken(payload.token);
+  return payload.user;
+}
+
+export async function fetchPublicPlans() {
+  const response = await fetch(`${API_BASE}/api/plans`);
+  const payload = await readJson<{
+    ok: boolean;
+    plans: Array<{ id: string; name: string; dailyLimit: number | null; monthlyLimit: number | null }>;
+  }>(response);
+  return payload.plans;
+}
+
 export async function logout() {
   const token = getToken();
   try {

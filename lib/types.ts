@@ -237,7 +237,11 @@ export type UsageSnapshot = {
   plan: string;
   planName: string;
   dailyLimit: number;
+  monthlyLimit: number;
   usedToday: number;
+  usedThisMonth: number;
+  remainingDaily: number;
+  remainingMonthly: number;
   remaining: number;
   date?: string;
   timezone?: string;

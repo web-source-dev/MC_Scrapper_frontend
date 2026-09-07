@@ -249,37 +249,50 @@ export function SearchTool() {
         </div>
       </div>
 
-      <aside className="rail" aria-label="Usage and recent searches">
-        <details className="rail-drawer">
-          <summary>Usage &amp; recent</summary>
-          <div className="rail-drawer-body">
+        <aside className="rail" aria-label="Usage and recent searches">
+          <details className="rail-drawer">
+            <summary>
+              <span className="rail-drawer-title">Usage &amp; recent</span>
+              {user ? (
+                <span className="rail-drawer-meta">
+                  {Number(user.usedToday || 0).toLocaleString()}/{Number(user.dailyLimit || 0).toLocaleString()} day ·{" "}
+                  {Number(user.usedThisMonth || 0).toLocaleString()}/{Number(user.monthlyLimit || 0).toLocaleString()} mo
+                  <span className="rail-drawer-meta-left">{Number(user.remaining || 0).toLocaleString()} left</span>
+                </span>
+              ) : null}
+            </summary>
+            <div className="rail-drawer-body">
+              {user ? <UsagePanel user={user} compact /> : null}
+              {recents.length ? (
+                <div className="recents">
+                  <p>Recent</p>
+                  <div className="recents-list">
+                    {recents.map((item) => (
+                      <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </details>
+          <div className="rail-desktop">
             {user ? <UsagePanel user={user} /> : null}
             {recents.length ? (
               <div className="recents">
                 <p>Recent</p>
-                {recents.map((item) => (
-                  <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
-                    {item.label}
-                  </button>
-                ))}
+                <div className="recents-list">
+                  {recents.map((item) => (
+                    <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : null}
           </div>
-        </details>
-        <div className="rail-desktop">
-          {user ? <UsagePanel user={user} /> : null}
-          {recents.length ? (
-            <div className="recents">
-              <p>Recent</p>
-              {recents.map((item) => (
-                <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </aside>
+        </aside>
     </div>
   );
 }
