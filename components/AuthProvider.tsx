@@ -13,7 +13,6 @@ type AuthState = {
     name: string;
     company: string;
     phone: string;
-    jobTitle: string;
     email: string;
     password: string;
   }) => Promise<void>;
@@ -79,7 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: string;
       company: string;
       phone: string;
-      jobTitle: string;
       email: string;
       password: string;
     }) => {

@@ -5,21 +5,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "./AuthProvider";
 import { AuthShell } from "./AuthShell";
 
-const JOB_OPTIONS = [
-  { id: "dispatcher", label: "Dispatcher" },
-  { id: "broker", label: "Broker" },
-  { id: "carrier_ops", label: "Carrier ops" },
-  { id: "owner", label: "Owner / manager" },
-  { id: "other", label: "Other" },
-] as const;
-
 export function SignupScreen() {
   const { signup, user, ready } = useAuth();
   const router = useRouter();
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
-  const [jobTitle, setJobTitle] = useState<(typeof JOB_OPTIONS)[number]["id"]>("dispatcher");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,7 +30,7 @@ export function SignupScreen() {
     setBusy(true);
     setError(null);
     try {
-      await signup({ name, company, phone, jobTitle, email, password });
+      await signup({ name, company, phone, email, password });
       router.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to create account");
@@ -87,29 +78,17 @@ export function SignupScreen() {
           </label>
         </div>
 
-        <div className="auth-field-row">
-          <label className="auth-field">
-            <span>Phone</span>
-            <input
-              type="tel"
-              autoComplete="tel"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              required
-              placeholder="Desk or mobile"
-            />
-          </label>
-          <label className="auth-field">
-            <span>Role</span>
-            <select value={jobTitle} onChange={(event) => setJobTitle(event.target.value as typeof jobTitle)}>
-              {JOB_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <label className="auth-field">
+          <span>Phone</span>
+          <input
+            type="tel"
+            autoComplete="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            required
+            placeholder="Desk or mobile"
+          />
+        </label>
 
         <label className="auth-field">
           <span>Work email</span>

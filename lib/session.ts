@@ -7,7 +7,6 @@ export type AuthUser = {
   name: string;
   company?: string | null;
   phone?: string | null;
-  jobTitle?: string | null;
   role?: "dispatcher" | "admin";
   plan?: string;
   planName?: string;

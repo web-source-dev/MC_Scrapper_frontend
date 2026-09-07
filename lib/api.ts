@@ -37,7 +37,6 @@ export async function signup(input: {
   name: string;
   company: string;
   phone: string;
-  jobTitle: string;
   email: string;
   password: string;
 }) {
