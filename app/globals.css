@@ -1082,6 +1082,172 @@ main {
   background: rgba(15, 23, 42, 0.45);
 }
 
+.dathub-promo-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(8, 14, 24, 0.62);
+  backdrop-filter: blur(4px);
+  animation: lp-rise 220ms ease both;
+}
+
+.dathub-promo {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: min(92vh, 720px);
+  overflow: auto;
+  padding: 22px 20px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #10233a 0%, #0b1828 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  color: #e8eef6;
+}
+
+.dathub-promo-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dathub-promo-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.dathub-promo-kicker {
+  margin: 0 0 8px;
+  font-family: var(--font-ibm-plex), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9aabbc;
+}
+
+.dathub-promo h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: #fff;
+  padding-right: 28px;
+}
+
+.dathub-promo-copy {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9aabbc;
+}
+
+.dathub-promo-banner {
+  display: block;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #061018;
+}
+
+.dathub-promo-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.dathub-promo-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dathub-promo-cta,
+.dathub-promo-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.dathub-promo-cta,
+.dathub-promo-cta:link,
+.dathub-promo-cta:visited {
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  color: #0f243c !important;
+}
+
+.dathub-promo-cta:hover,
+.dathub-promo-cta:focus-visible {
+  background: #dce6f1;
+  border-color: #dce6f1;
+  color: #0f243c !important;
+  text-decoration: none !important;
+}
+
+.dathub-promo-cta:active {
+  background: #cfdceb;
+  color: #0f243c !important;
+}
+
+.dathub-promo-dismiss {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #f2f6fb !important;
+}
+
+.dathub-promo-dismiss:hover,
+.dathub-promo-dismiss:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff !important;
+}
+
+.dathub-promo-dismiss:active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff !important;
+}
+
+@media (max-width: 640px) {
+  .dathub-promo {
+    width: min(500px, 100%);
+    padding: 18px 14px 14px;
+  }
+
+  .dathub-promo-banner img {
+    max-height: 280px;
+  }
+
+  .dathub-promo-cta,
+  .dathub-promo-dismiss {
+    min-height: 46px;
+  }
+}
+
 .dat-compose {
   --dc-accent: #0f243c;
   --dc-accent-hover: #1a3552;
@@ -6757,17 +6923,103 @@ a.ghost.auth-nav-link:hover,
   align-items: start;
 }
 
+.plans-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .plans-page-head h2 {
   margin: 4px 0 8px;
   font-size: 1.45rem;
 }
 
-.plans-page-head .ghost {
+.plans-page-head .ghost,
+.plans-page-head .primary,
+.plans-change-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 36px;
-  padding: 0 12px;
+  padding: 0 14px;
+  border-radius: 8px;
   text-decoration: none !important;
+  font-weight: 800;
+}
+
+.plans-change-btn,
+a.plans-change-btn {
+  background: var(--navy);
+  color: #fff !important;
+  border: 1px solid var(--navy);
+}
+
+.plans-change-btn:hover,
+a.plans-change-btn:hover {
+  background: var(--navy-2);
+  color: #fff !important;
+}
+
+.plans-contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px 20px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.plans-contact-kicker {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.plans-contact h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--navy);
+}
+
+.plans-contact p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 36rem;
+}
+
+.plans-contact-meta {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  text-align: right;
+}
+
+.plans-contact-meta a {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.plans-contact-meta a:hover {
+  text-decoration: underline;
+}
+
+.plans-contact-meta span {
+  font-family: var(--font-ibm-plex), monospace;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .plans-grid {
@@ -6887,6 +7139,21 @@ a.ghost.auth-nav-link:hover,
 @media (max-width: 640px) {
   .plans-page-head {
     flex-direction: column;
+  }
+
+  .plans-page-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .plans-contact {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .plans-contact-meta {
+    justify-items: start;
+    text-align: left;
   }
 
   .marketing-pain-grid {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BrandMark } from "./BrandMark";
+import { APP_NAME } from "@/lib/brand";
 
 type Props = {
   mode: "login" | "signup";
@@ -18,7 +19,7 @@ export function AuthShell({ mode, title, lede, children }: Props) {
     <div className="lp auth-page">
       <header className="auth-nav">
         <div className="auth-nav-inner">
-          <Link href="/" className="brand" aria-label="MC Finder home">
+          <Link href="/" className="brand" aria-label={`${APP_NAME} home`}>
             <BrandMark className="on-dark" />
           </Link>
           <nav aria-label="Account">
@@ -38,7 +39,7 @@ export function AuthShell({ mode, title, lede, children }: Props) {
             <img src="/home-search.png" alt="" width={1440} height={900} decoding="async" />
           </div>
           <div className="auth-aside-copy">
-            <p className="lp-brand">MC Finder</p>
+            <p className="lp-brand">{APP_NAME}</p>
             <h1>{title}</h1>
             <p>{lede}</p>
           </div>

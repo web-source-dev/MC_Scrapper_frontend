@@ -17,6 +17,7 @@ import {
   MAIL_UI_ENABLED,
 } from "@/lib/email";
 import { fetchEmailStatus } from "@/lib/api";
+import { DAT_HUB_PHONE_DISPLAY, datHubWhatsAppUrl } from "@/lib/datHub";
 import type { AuthUser } from "@/lib/session";
 
 type DeskNavId = "dashboard" | "search" | "plans" | "templates" | "gmail" | "recent";
@@ -232,7 +233,7 @@ export function DeskShell({ children }: { children: ReactNode }) {
       </a>
       <aside className="app-sidebar" aria-label="Desk pages">
         <div className="sidebar-brand">
-          <Link href="/dashboard" aria-label="MC Finder dashboard">
+          <Link href="/dashboard" aria-label="MC Scrapper dashboard">
             <BrandMark className="on-dark brand-mark-sidebar" />
           </Link>
         </div>
@@ -252,13 +253,15 @@ export function DeskShell({ children }: { children: ReactNode }) {
         <div className="sidebar-promo">
           <a
             className="sidebar-promo-link"
-            href="tel:+923133808594"
-            aria-label="Call DAT HUB now at +92 313 3808594"
+            href={datHubWhatsAppUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Message DAT HUB on WhatsApp at ${DAT_HUB_PHONE_DISPLAY}`}
           >
             <img
               className="sidebar-promo-img"
               src="/Dat_hub_ad.png"
-              alt="DAT HUB — Get access to DAT Loadboard for truck dispatching. Call +92 313 3808594"
+              alt={`DAT HUB — Get access to DAT Loadboard for truck dispatching. WhatsApp ${DAT_HUB_PHONE_DISPLAY}`}
               width={560}
               height={900}
               loading="lazy"

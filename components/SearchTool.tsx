@@ -23,6 +23,7 @@ import {
 } from "@/lib/types";
 import { ResultsTable } from "./ResultsTable";
 import { SearchForm } from "./SearchForm";
+import { DatHubPromoModal } from "./DatHubPromoModal";
 
 const FALLBACK_META: MetaResponse = {
   searchModes: [
@@ -93,6 +94,7 @@ export function SearchTool() {
   const [carriers, setCarriers] = useState<Carrier[] | null>(cached?.carriers ?? null);
   const [result, setResult] = useState<VerifyResponse["meta"] | null>(cached?.result ?? null);
   const [recents, setRecents] = useState<RecentSearch[]>([]);
+  const [datHubOpen, setDatHubOpen] = useState(false);
   const remaining = user?.remaining;
   const clock = clockProblem(
     {
@@ -154,6 +156,7 @@ export function SearchTool() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (clockBlocked) return;
+    setDatHubOpen(true);
     setLoading(true);
     setError(null);
 
@@ -293,6 +296,7 @@ export function SearchTool() {
             ) : null}
           </div>
         </aside>
+      <DatHubPromoModal open={datHubOpen} onClose={() => setDatHubOpen(false)} />
     </div>
   );
 }

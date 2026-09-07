@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { BrandMark } from "./BrandMark";
 import { useAuth } from "./AuthProvider";
+import { APP_NAME } from "@/lib/brand";
+import { DAT_HUB_PHONE_DISPLAY, datHubWhatsAppUrl } from "@/lib/datHub";
 import { PLAN_CATALOG, formatPlanLimit } from "@/lib/plans";
 
 const CHAPTERS = [
@@ -12,7 +14,7 @@ const CHAPTERS = [
     title: "Search the way the desk works",
     body: "MC range, USDOT, company, city, ZIP, or phone — then filter by fleet, safety, MCS-150, and contacts.",
     src: "/home-search.png",
-    alt: "MC Finder search desk with filters and matched carriers",
+    alt: `${APP_NAME} search desk with filters and matched carriers`,
   },
   {
     index: "02",
@@ -24,11 +26,11 @@ const CHAPTERS = [
   {
     index: "03",
     title: "Pair with DAT when you need loads",
-    body: "MC Finder finds authorized carriers. For loadboard access, call DAT Hub.",
+    body: `${APP_NAME} finds authorized carriers. For loadboard access, message DAT Hub on WhatsApp.`,
     src: "/home-dat-hub.png",
     alt: "DAT Loadboard access for truck dispatching",
-    href: "tel:+923133808594",
-    cta: "+92 313 3808594",
+    href: datHubWhatsAppUrl(),
+    cta: `WhatsApp ${DAT_HUB_PHONE_DISPLAY}`,
   },
 ];
 
@@ -99,7 +101,7 @@ export function LandingPage() {
     <div className="lp" ref={root}>
       <header className="lp-nav">
         <div className="lp-nav-inner">
-          <Link href="/" className="brand" aria-label="MC Finder home">
+          <Link href="/" className="brand" aria-label={`${APP_NAME} home`}>
             <BrandMark className="on-dark" />
           </Link>
           <nav aria-label="Primary">
@@ -129,7 +131,7 @@ export function LandingPage() {
         </div>
         <div className="lp-hero-scrim" aria-hidden="true" />
         <div className="lp-hero-content">
-          <p className="lp-brand">MC Finder</p>
+          <p className="lp-brand">{APP_NAME}</p>
           <h1>Authorized carriers. One desk.</h1>
           <p className="lp-lede">
             Search SAFER-active, MC-authorized USA carriers — filter, review, export.
@@ -168,7 +170,7 @@ export function LandingPage() {
               <h2>{chapter.title}</h2>
               <p>{chapter.body}</p>
               {chapter.href ? (
-                <a className="lp-text-link" href={chapter.href}>
+                <a className="lp-text-link" href={chapter.href} target="_blank" rel="noopener noreferrer">
                   {chapter.cta}
                 </a>
               ) : null}
@@ -258,7 +260,7 @@ export function LandingPage() {
       </section>
 
       <section className="lp-close lp-reveal">
-        <p className="lp-brand">MC Finder</p>
+        <p className="lp-brand">{APP_NAME}</p>
         <h2>Find the next carrier. Dial with confidence.</h2>
         {signedIn ? (
           <Link href="/search" className="lp-btn lp-btn-solid">
@@ -279,9 +281,11 @@ export function LandingPage() {
             <a href="#plans">Plans</a>
             <Link href="/login">Sign in</Link>
             <Link href="/signup">Sign up</Link>
-            <a href="tel:+923133808594">DAT Hub</a>
+            <a href={datHubWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
+              DAT Hub
+            </a>
           </div>
-          <p>© {new Date().getFullYear()} MC Finder</p>
+          <p>© {new Date().getFullYear()} {APP_NAME}</p>
         </div>
       </footer>
     </div>

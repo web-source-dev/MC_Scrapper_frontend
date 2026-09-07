@@ -84,6 +84,12 @@ export function formatPlanLimit(daily: number | null | undefined, monthly?: numb
   return `${daily.toLocaleString()} / day · ${monthly.toLocaleString()} / month`;
 }
 
+/** Plan card heading — monthly volume only. */
+export function formatPlanMonthly(monthly: number | null | undefined) {
+  if (monthly == null) return "Custom / month";
+  return `${monthly.toLocaleString()} / month`;
+}
+
 export function mergePlanCatalog(
   apiPlans?: Array<{ id: string; name: string; dailyLimit: number | null; monthlyLimit?: number | null }>,
 ): PlanInfo[] {
