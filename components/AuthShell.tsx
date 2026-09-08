@@ -7,13 +7,17 @@ type Props = {
   mode: "login" | "signup";
   title: string;
   lede: string;
+  kicker?: string;
+  panelTitle?: string;
   children: ReactNode;
 };
 
-export function AuthShell({ mode, title, lede, children }: Props) {
+export function AuthShell({ mode, title, lede, kicker, panelTitle, children }: Props) {
   const switchHref = mode === "login" ? "/signup" : "/login";
   const switchLabel = mode === "login" ? "Sign up" : "Sign in";
   const switchHint = mode === "login" ? "New here?" : "Already have an account?";
+  const heading = panelTitle || (mode === "login" ? "Sign in" : "Create account");
+  const eyebrow = kicker || (mode === "login" ? "Welcome back" : "Get started");
 
   return (
     <div className="lp auth-page">
@@ -47,8 +51,8 @@ export function AuthShell({ mode, title, lede, children }: Props) {
 
         <section className="auth-panel">
           <div className="auth-panel-inner">
-            <p className="lp-kicker">{mode === "login" ? "Welcome back" : "Get started"}</p>
-            <h2 className="auth-panel-title">{mode === "login" ? "Sign in" : "Create account"}</h2>
+            <p className="lp-kicker">{eyebrow}</p>
+            <h2 className="auth-panel-title">{heading}</h2>
             {children}
             <p className="auth-switch">
               {switchHint} <Link href={switchHref}>{switchLabel}</Link>

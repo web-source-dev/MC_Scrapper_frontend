@@ -6,7 +6,7 @@ import { BrandMark } from "./BrandMark";
 import { useAuth } from "./AuthProvider";
 import { APP_NAME } from "@/lib/brand";
 import { DAT_HUB_PHONE_DISPLAY, datHubWhatsAppUrl } from "@/lib/datHub";
-import { PLAN_CATALOG, formatPlanLimit } from "@/lib/plans";
+import { PLAN_CATALOG, formatPlanLimit, formatPlanPrice } from "@/lib/plans";
 
 const CHAPTERS = [
   {
@@ -209,6 +209,7 @@ export function LandingPage() {
         <div className="lp-plan-table" role="table" aria-label="Plans">
           <div className="lp-plan-row lp-plan-head" role="row">
             <span role="columnheader">Plan</span>
+            <span role="columnheader">Price</span>
             <span role="columnheader">Daily</span>
             <span role="columnheader">Monthly</span>
           </div>
@@ -218,6 +219,7 @@ export function LandingPage() {
                 {plan.name}
                 {plan.featured ? <em>Popular</em> : null}
               </span>
+              <span role="cell">{formatPlanPrice(plan.priceUsd)}</span>
               <span role="cell">{plan.dailyLimit?.toLocaleString() ?? "—"}</span>
               <span role="cell">{plan.monthlyLimit?.toLocaleString() ?? "—"}</span>
             </div>

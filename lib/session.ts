@@ -12,6 +12,7 @@ export type AuthUser = {
   planName?: string;
   dailyLimit?: number;
   monthlyLimit?: number;
+  features?: string[];
   usedToday?: number;
   usedThisMonth?: number;
   remainingDaily?: number;

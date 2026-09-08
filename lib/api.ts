@@ -4,7 +4,13 @@ import { AuthError, authHeaders, clearToken, getToken, setToken, type AuthUser }
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 async function readJson<T>(response: Response): Promise<T> {
-  const payload = (await response.json().catch(() => ({}))) as T & { error?: string; code?: string };
+  const payload = (await response.json().catch(() => ({}))) as T & {
+    error?: string;
+    code?: string;
+    field?: string;
+    errors?: Record<string, string>;
+    resendIn?: number;
+  };
   if (response.status === 401 || (response.status === 403 && payload.code === "ACCOUNT_BANNED")) {
     clearToken();
     throw new AuthError(
@@ -17,7 +23,19 @@ async function readJson<T>(response: Response): Promise<T> {
     throw new AuthError(payload.error || "Correct the day and date on this computer.", 403, "CLOCK_SKEW");
   }
   if (!response.ok) {
-    throw new Error(payload.error || `Request failed (${response.status})`);
+    const error = new Error(payload.error || `Request failed (${response.status})`) as Error & {
+      status: number;
+      code?: string;
+      field?: string;
+      errors?: Record<string, string>;
+      resendIn?: number;
+    };
+    error.status = response.status;
+    error.code = payload.code;
+    error.field = payload.field;
+    error.errors = payload.errors;
+    if (typeof payload.resendIn === "number") error.resendIn = payload.resendIn;
+    throw error;
   }
   return payload;
 }
@@ -33,7 +51,7 @@ export async function login(email: string, password: string) {
   return payload.user;
 }
 
-export async function signup(input: {
+export async function startSignup(input: {
   name: string;
   company: string;
   phone: string;
@@ -45,16 +63,42 @@ export async function signup(input: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
+  return readJson<{ ok: boolean; needsVerification: boolean; email: string; expiresIn: number; resendIn: number }>(
+    response,
+  );
+}
+
+export async function verifySignup(email: string, otp: string) {
+  const response = await fetch(`${API_BASE}/api/auth/signup/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+  });
   const payload = await readJson<{ ok: boolean; token: string; user: AuthUser }>(response);
   setToken(payload.token);
   return payload.user;
+}
+
+export async function resendSignupOtp(email: string) {
+  const response = await fetch(`${API_BASE}/api/auth/signup/resend`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return readJson<{ ok: boolean; email: string; expiresIn: number; resendIn: number }>(response);
 }
 
 export async function fetchPublicPlans() {
   const response = await fetch(`${API_BASE}/api/plans`);
   const payload = await readJson<{
     ok: boolean;
-    plans: Array<{ id: string; name: string; dailyLimit: number | null; monthlyLimit: number | null }>;
+    plans: Array<{
+      id: string;
+      name: string;
+      dailyLimit: number | null;
+      monthlyLimit: number | null;
+      features?: string[];
+    }>;
   }>(response);
   return payload.plans;
 }

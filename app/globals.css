@@ -56,8 +56,27 @@ a {
 }
 
 a:hover {
-  color: var(--accent);
+  color: var(--navy);
   text-decoration: underline;
+}
+
+a.primary:hover,
+a.ghost:hover,
+a.lp-btn:hover,
+a.filter-chip-btn:hover,
+a.toolbar-btn:hover,
+a.plans-change-btn:hover,
+a.result-card-call:hover,
+a.dispatch-call:hover,
+a.sidebar-nav:hover,
+.sidebar-nav a:hover,
+a.dathub-promo-cta:hover,
+a.dathub-promo-dismiss:hover,
+a.auth-nav-link:hover,
+a.auth-nav-quiet:hover,
+a.auth-nav-cta:hover,
+a.sidebar-promo-link:hover {
+  text-decoration: none;
 }
 
 .skip-link {
@@ -228,9 +247,24 @@ a:hover {
 .header-tools {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
+  justify-content: space-between;
   gap: 12px;
+}
+
+.header-quota {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-session {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .status-pill-label-short {
@@ -263,7 +297,8 @@ a:hover {
 }
 
 .sign-out:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
 }
 
 .desk-nav {
@@ -705,6 +740,111 @@ a:hover {
   box-shadow: 0 0 0 3px rgba(215, 228, 242, 0.12);
 }
 
+.auth-field.is-invalid input {
+  border-color: rgba(244, 120, 110, 0.72);
+}
+
+.auth-field.is-invalid input:focus {
+  border-color: rgba(255, 176, 170, 0.9);
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.24);
+}
+
+.auth-field-hint,
+.auth-field-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.auth-field-hint {
+  color: #9aabbc;
+}
+
+.auth-field-error {
+  color: #ffc7c2;
+}
+
+.auth-password-meta {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-strength {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-strength-label {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: #c9d6e4;
+}
+
+.auth-strength-track {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.auth-strength-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #f0a39c;
+  transition: width 160ms ease, background-color 160ms ease;
+}
+
+.auth-strength.is-fair .auth-strength-track span {
+  background: #e4b84a;
+}
+
+.auth-strength.is-strong .auth-strength-track span {
+  background: #6fbf8b;
+}
+
+.auth-checks {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-checks li {
+  position: relative;
+  padding-left: 1.15em;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: #9aabbc;
+}
+
+.auth-checks li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: #7f93a8;
+}
+
+.auth-checks li.is-met {
+  color: #cfe8d6;
+}
+
+.auth-checks li.is-met::before {
+  content: "✓";
+  color: #8fd4a4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-strength-track span {
+    transition: none;
+  }
+}
+
 .auth-submit {
   width: 100%;
   min-height: 46px;
@@ -716,6 +856,50 @@ a:hover {
   opacity: 0.7;
   cursor: wait;
   transform: none;
+}
+
+.auth-otp-field input {
+  font-size: 1.35rem;
+  letter-spacing: 0.42em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-otp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-text-btn {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #d7e4f2;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.auth-text-btn:hover:not(:disabled) {
+  color: #fff;
+}
+
+.auth-text-btn:disabled {
+  color: #7f93a8;
+  text-decoration: none;
+  cursor: default;
+}
+
+.auth-text-btn:focus-visible {
+  outline: 2px solid rgba(215, 228, 242, 0.7);
+  outline-offset: 3px;
 }
 
 .auth-switch {
@@ -1023,7 +1207,7 @@ main {
 }
 
 .header-session-user {
-  max-width: 140px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1043,7 +1227,7 @@ main {
 }
 
 .app-content .topbar {
-  width: auto;
+  width: 100%;
   margin: 0;
   padding: 12px 20px;
 }
@@ -1485,6 +1669,7 @@ main {
 .dat-btn-primary:hover:not(:disabled) {
   background: var(--dc-accent-hover);
   border-color: var(--dc-accent-hover);
+  color: #fff;
 }
 
 .dat-btn-linkish {
@@ -1495,6 +1680,7 @@ main {
 
 .dat-btn-linkish:hover:not(:disabled) {
   background: var(--dc-accent-subtle);
+  color: var(--dc-accent);
 }
 
 .dat-hint {
@@ -1770,12 +1956,32 @@ main {
 
 .filter-chip-btn:hover {
   border-color: #9aa8b6;
+  color: var(--ink);
 }
 
 .filter-chip-btn.is-on {
   background: #1b2634;
   border-color: #1b2634;
   color: #fff;
+}
+
+.filter-chip-btn.is-on:hover {
+  background: #101820;
+  border-color: #101820;
+  color: #fff;
+}
+
+.filter-chip-btn.is-locked,
+a.filter-chip-btn.is-locked {
+  color: #6b7785;
+  background: #f4f7fa;
+  border-style: dashed;
+  text-decoration: none;
+}
+
+.filter-chip-btn.is-locked:hover {
+  border-color: #1b2634;
+  color: #1b2634;
 }
 
 .filter-chip-btn[aria-expanded="true"] {
@@ -3080,11 +3286,13 @@ a.ghost:hover {
   color: #f4f1ea !important;
 }
 
-.app-header .ghost:hover,
-.marketing-top .ghost:hover,
+.app-header button.ghost:hover:not(:disabled),
 .app-header a.ghost:hover,
+.app-header .sign-out:hover:not(:disabled),
+.marketing-top button.ghost:hover:not(:disabled),
 .marketing-top a.ghost:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.42);
   color: #fff !important;
 }
 
@@ -3096,11 +3304,11 @@ a.ghost:hover {
   color: var(--navy) !important;
 }
 
-.app-header .primary:hover,
-.marketing-top .primary:hover,
+.app-header button.primary:hover:not(:disabled),
 .app-header a.primary:hover,
+.marketing-top button.primary:hover:not(:disabled),
 .marketing-top a.primary:hover {
-  background: #e8eef5;
+  background: #e8eef5 !important;
   color: var(--navy) !important;
 }
 
@@ -3129,6 +3337,7 @@ a.ghost:hover {
 
 .text-btn:hover {
   background: var(--paper-2);
+  color: var(--navy-2);
 }
 
 .workspace-main {
@@ -3372,6 +3581,7 @@ tbody tr.is-open {
 
 .copy-btn:hover {
   background: #e8edf2;
+  color: var(--navy-2);
 }
 
 .copy-value.is-compact .copy-btn {
@@ -4061,6 +4271,10 @@ td.mono {
     flex: none;
     flex-wrap: nowrap;
     justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .header-session {
     gap: 6px;
   }
 
@@ -6582,7 +6796,7 @@ a.ghost.auth-nav-link:hover,
 
 .lp-plan-row {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
+  grid-template-columns: 1.2fr 0.9fr 1fr 1fr;
   gap: 12px;
   padding: 16px 20px;
   align-items: center;
@@ -6825,10 +7039,14 @@ a.ghost.auth-nav-link:hover,
   }
 
   .lp-plan-row span:nth-child(2)::before {
-    content: "Daily ";
+    content: "Price ";
   }
 
   .lp-plan-row span:nth-child(3)::before {
+    content: "Daily ";
+  }
+
+  .lp-plan-row span:nth-child(4)::before {
     content: "Monthly ";
   }
 
@@ -7063,12 +7281,22 @@ a.plans-change-btn:hover {
   color: var(--navy);
 }
 
-.plan-limit {
+.plan-price {
   margin: 0;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.03em;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-limit {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 1.35;
+  color: var(--muted);
 }
 
 .plan-blurb {
@@ -7085,6 +7313,43 @@ a.plans-change-btn:hover {
   gap: 4px;
   color: var(--ink);
   font-size: 13px;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 8px 0 0 !important;
+  border-top: 1px solid var(--line);
+  gap: 6px !important;
+}
+
+.plan-features li {
+  display: grid;
+  grid-template-columns: 1.1em 1fr;
+  gap: 6px;
+  align-items: start;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.plan-features li span {
+  font-weight: 700;
+}
+
+.plan-features .is-on {
+  color: var(--ink);
+}
+
+.plan-features .is-off {
+  color: var(--muted);
+}
+
+.plan-features .is-pick {
+  color: var(--navy-2);
+}
+
+.toolbar-btn.is-locked {
+  opacity: 0.7;
+  text-decoration: none;
 }
 
 .plan-note {
@@ -7163,5 +7428,77 @@ a.plans-change-btn:hover {
   .marketing-top-inner {
     width: min(1160px, calc(100% - 20px));
   }
+}
+
+/* Hover contrast: fill and type always move together (no white-on-white). */
+button.primary:hover:not(:disabled),
+a.primary:hover,
+.primary:hover:not(:disabled) {
+  background: var(--navy-2);
+  color: #fff !important;
+}
+
+button.ghost:hover:not(:disabled),
+a.ghost:hover,
+.ghost:hover:not(:disabled) {
+  background: var(--paper-2);
+  color: var(--ink) !important;
+}
+
+.app-header button.ghost:hover:not(:disabled),
+.app-header a.ghost:hover,
+.app-header .sign-out:hover:not(:disabled),
+.marketing-top button.ghost:hover:not(:disabled),
+.marketing-top a.ghost:hover,
+.lp-btn-ghost:hover,
+.dathub-promo-dismiss:hover,
+.dathub-promo-dismiss:focus-visible,
+.auth-nav-link:hover,
+a.ghost.auth-nav-link:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff !important;
+}
+
+.app-header button.primary:hover:not(:disabled),
+.app-header a.primary:hover,
+.marketing-top button.primary:hover:not(:disabled),
+.marketing-top a.primary:hover,
+button.lp-btn-solid:hover:not(:disabled),
+a.lp-btn-solid:hover,
+.lp-nav a.lp-btn-solid:hover,
+.auth-nav a.lp-btn-solid:hover,
+.dathub-promo-cta:hover,
+.dathub-promo-cta:focus-visible {
+  background: #e8eef5 !important;
+  color: #0f243c !important;
+}
+
+.plans-change-btn:hover,
+a.plans-change-btn:hover {
+  background: var(--navy-2) !important;
+  color: #fff !important;
+}
+
+.filter-chip-btn.is-on:hover,
+.filter-chip-btn.is-on:hover span {
+  color: #fff;
+}
+
+.desk-home-actions a.primary:hover {
+  background: var(--navy-2) !important;
+  color: #fff !important;
+}
+
+.desk-home-actions a.ghost:hover {
+  background: var(--paper-2) !important;
+  color: var(--ink) !important;
+}
+
+.danger-ghost:hover:not(:disabled),
+.mail-editor-actions .danger-ghost:hover,
+.text-btn.danger:hover {
+  background: var(--bad-bg) !important;
+  color: var(--bad) !important;
 }
 

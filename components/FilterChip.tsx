@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { MobileFilterSheet, useIsMobileFilter } from "@/lib/filterMenuPortal";
 
@@ -17,6 +18,9 @@ type Props = {
   defaultValue?: string;
   alwaysOn?: boolean;
   showSelectedOnly?: boolean;
+  locked?: boolean;
+  lockHint?: string;
+  lockHref?: string;
 };
 
 export function FilterChip({
@@ -27,6 +31,9 @@ export function FilterChip({
   defaultValue = "",
   alwaysOn = false,
   showSelectedOnly = false,
+  locked = false,
+  lockHint = "Available on a higher plan",
+  lockHref = "/plans",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -74,6 +81,17 @@ export function FilterChip({
   useEffect(() => {
     if (!open) setQuery("");
   }, [open]);
+
+  if (locked) {
+    return (
+      <div className="filter-chip is-locked">
+        <Link href={lockHref} className="filter-chip-btn is-locked" title={lockHint}>
+          <span>{label}</span>
+          <LockMark />
+        </Link>
+      </div>
+    );
+  }
 
   const optionsList = (
     <>
@@ -151,5 +169,19 @@ export function FilterChip({
         </div>
       ) : null}
     </div>
+  );
+}
+
+export function LockMark() {
+  return (
+    <svg className="filter-lock" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M5 7V5.5A3 3 0 0 1 11 5.5V7M4 7h8v6.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

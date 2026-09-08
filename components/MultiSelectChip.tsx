@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { MobileFilterSheet, useIsMobileFilter } from "@/lib/filterMenuPortal";
+import { LockMark } from "./FilterChip";
 
 export type MultiSelectOption = {
   id: string;
@@ -15,6 +17,9 @@ type Props = {
   onChange: (next: string[]) => void;
   emptyLabel?: string;
   exclusivePairs?: Array<[string, string]>;
+  locked?: boolean;
+  lockHint?: string;
+  lockHref?: string;
 };
 
 export function MultiSelectChip({
@@ -24,6 +29,9 @@ export function MultiSelectChip({
   onChange,
   emptyLabel = "Any",
   exclusivePairs = [],
+  locked = false,
+  lockHint = "Available on a higher plan",
+  lockHref = "/plans",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -70,6 +78,17 @@ export function MultiSelectChip({
   useEffect(() => {
     if (!open) setQuery("");
   }, [open]);
+
+  if (locked) {
+    return (
+      <div className="filter-chip is-locked">
+        <Link href={lockHref} className="filter-chip-btn is-locked" title={lockHint}>
+          <span>{label}</span>
+          <LockMark />
+        </Link>
+      </div>
+    );
+  }
 
   function toggle(id: string) {
     if (selected.includes(id)) {

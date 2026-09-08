@@ -11,6 +11,7 @@ type Props = {
   carriers: Carrier[];
   truncated?: boolean;
   onClear?: () => void;
+  canExport?: boolean;
 };
 
 type SortKey = "mc" | "dot" | "name" | "state" | "trucks" | "safety";
@@ -171,7 +172,7 @@ function snapshotFor(carrier: Carrier, cache: Record<string, QcSnapshot>) {
   return carrier.snapshot || cache[carrier.id] || null;
 }
 
-export function ResultsTable({ carriers, truncated, onClear }: Props) {
+export function ResultsTable({ carriers, truncated, onClear, canExport = true }: Props) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [copied, setCopied] = useState("");
@@ -343,9 +344,15 @@ export function ResultsTable({ carriers, truncated, onClear }: Props) {
               <span className="toolbar-btn-short">Email</span>
             </button>
           ) : null}
-          <button type="button" className="ghost toolbar-btn" onClick={downloadCsv}>
-            Export
-          </button>
+          {canExport ? (
+            <button type="button" className="ghost toolbar-btn" onClick={downloadCsv}>
+              Export
+            </button>
+          ) : (
+            <a className="ghost toolbar-btn is-locked" href="/plans" title="CSV export is on Free and above. Message us if this is missing.">
+              Export
+            </a>
+          )}
           {onClear ? (
             <button type="button" className="ghost toolbar-btn" onClick={onClear}>
               Clear

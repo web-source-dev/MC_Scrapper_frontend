@@ -11,6 +11,7 @@ import {
   saveSearchForm,
   saveSearchSession,
 } from "@/lib/searchCache";
+import { featuresForUser, hasFeature, sanitizeSearchForm } from "@/lib/features";
 import { useAuth } from "./AuthProvider";
 import { ClockBlock } from "./ClockBlock";
 import { UsagePanel } from "./UsagePanel";
@@ -96,6 +97,8 @@ export function SearchTool() {
   const [recents, setRecents] = useState<RecentSearch[]>([]);
   const [datHubOpen, setDatHubOpen] = useState(false);
   const remaining = user?.remaining;
+  const featureKey = (user?.features || []).join(",");
+  const unlocked = useMemo(() => featuresForUser(user), [user, featureKey]);
   const clock = clockProblem(
     {
       serverNow: user?.serverNow,
@@ -138,6 +141,13 @@ export function SearchTool() {
     saveSearchForm(form);
   }, [form]);
 
+  useEffect(() => {
+    setForm((current) => {
+      const next = sanitizeSearchForm(current, unlocked);
+      return JSON.stringify(next) === JSON.stringify(current) ? current : next;
+    });
+  }, [unlocked]);
+
   function patchForm(patch: Partial<SearchFormState>) {
     setForm((current) => ({ ...current, ...patch }));
   }
@@ -161,16 +171,18 @@ export function SearchTool() {
     setError(null);
 
     try {
-      const payload = await verifyCarriers(form);
+      const safeForm = sanitizeSearchForm(form, unlocked);
+      if (safeForm !== form) setForm(safeForm);
+      const payload = await verifyCarriers(safeForm);
       const nextCarriers = payload.carriers || [];
       const nextResult = payload.meta || null;
       setCarriers(nextCarriers);
       setResult(nextResult);
-      await saveSearchSession({ form, carriers: nextCarriers, result: nextResult });
+      await saveSearchSession({ form: safeForm, carriers: nextCarriers, result: nextResult });
       if (payload.usage) {
         applyUsage(payload.usage);
       }
-      remember(form);
+      remember(safeForm);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to verify carriers");
     } finally {
@@ -202,6 +214,7 @@ export function SearchTool() {
           loading={loading}
           remaining={remaining}
           clockBlocked={clockBlocked}
+          features={unlocked}
           onChange={patchForm}
           onSubmit={onSubmit}
         />
@@ -239,14 +252,21 @@ export function SearchTool() {
                   Clear
                 </button>
               </div>
-              <ResultsTable carriers={carriers} truncated={result?.truncated} onClear={() => void clearResults()} />
+              <ResultsTable
+                carriers={carriers}
+                truncated={result?.truncated}
+                onClear={() => void clearResults()}
+                canExport={hasFeature(unlocked, "export_csv")}
+              />
             </>
           ) : null}
 
           {hydrated && !loading && !carriers && !error && !clock ? (
             <div className="empty intro">
               <h2>Search a carrier</h2>
-              <p>Enter an MC range, USDOT, name, location, or phone, then search. Results stay until you hit Clear.</p>
+              <p>
+                Start with MC, USDOT, or company. Location, phone, and extra filters unlock on higher plans.
+              </p>
             </div>
           ) : null}
         </div>

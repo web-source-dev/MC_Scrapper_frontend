@@ -279,18 +279,22 @@ export function DeskShell({ children }: { children: ReactNode }) {
               <p className="page-title">{pageTitle}</p>
             </div>
             <div className="header-tools">
-              <QuotaMeter user={user} />
-              <QuotaMeter user={user} compact />
-              <p className="session-user header-session-user" title={user.email}>
-                {user.name}
-              </p>
-              <button type="button" className="ghost sign-out header-sign-out" onClick={() => void onLogout()}>
-                Sign out
-              </button>
-              <div className="mobile-session">
-                <button type="button" className="ghost sign-out" onClick={() => void onLogout()} aria-label="Sign out">
-                  Out
+              <div className="header-quota">
+                <QuotaMeter user={user} />
+                <QuotaMeter user={user} compact />
+              </div>
+              <div className="header-session">
+                <p className="session-user header-session-user" title={user.email}>
+                  {user.name}
+                </p>
+                <button type="button" className="ghost sign-out header-sign-out" onClick={() => void onLogout()}>
+                  Sign out
                 </button>
+                <div className="mobile-session">
+                  <button type="button" className="ghost sign-out" onClick={() => void onLogout()} aria-label="Sign out">
+                    Out
+                  </button>
+                </div>
               </div>
             </div>
           </div>

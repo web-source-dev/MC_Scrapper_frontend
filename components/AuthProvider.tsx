@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { fetchMe, login as apiLogin, logout as apiLogout, signup as apiSignup } from "@/lib/api";
+import { fetchMe, login as apiLogin, logout as apiLogout, resendSignupOtp as apiResendSignupOtp, startSignup as apiStartSignup, verifySignup as apiVerifySignup } from "@/lib/api";
 import { AUTH_EVENT, AuthError, getToken, type AuthUser } from "@/lib/session";
 
 type AuthState = {
@@ -9,13 +9,15 @@ type AuthState = {
   user: AuthUser | null;
   notice: string | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (input: {
+  startSignup: (input: {
     name: string;
     company: string;
     phone: string;
     email: string;
     password: string;
-  }) => Promise<void>;
+  }) => Promise<{ email: string; expiresIn: number; resendIn: number }>;
+  verifySignup: (email: string, otp: string) => Promise<void>;
+  resendSignupOtp: (email: string) => Promise<{ expiresIn: number; resendIn: number }>;
   logout: () => Promise<void>;
   applyUsage: (usage: Partial<AuthUser>) => void;
 };
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNotice(null);
   }, []);
 
-  const signup = useCallback(
+  const startSignup = useCallback(
     async (input: {
       name: string;
       company: string;
@@ -81,12 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string;
       password: string;
     }) => {
-      const next = await apiSignup(input);
-      setUser(next);
-      setNotice(null);
+      const result = await apiStartSignup(input);
+      return { email: result.email, expiresIn: result.expiresIn, resendIn: result.resendIn };
     },
     [],
   );
+
+  const verifySignup = useCallback(async (email: string, otp: string) => {
+    const next = await apiVerifySignup(email, otp);
+    setUser(next);
+    setNotice(null);
+  }, []);
+
+  const resendSignupOtp = useCallback(async (email: string) => {
+    const result = await apiResendSignupOtp(email);
+    return { expiresIn: result.expiresIn, resendIn: result.resendIn };
+  }, []);
 
   const logout = useCallback(async () => {
     await apiLogout();
@@ -99,8 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ready, user, notice, login, signup, logout, applyUsage }),
-    [ready, user, notice, login, signup, logout, applyUsage],
+    () => ({ ready, user, notice, login, startSignup, verifySignup, resendSignupOtp, logout, applyUsage }),
+    [ready, user, notice, login, startSignup, verifySignup, resendSignupOtp, logout, applyUsage],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

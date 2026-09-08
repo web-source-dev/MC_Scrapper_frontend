@@ -3,6 +3,7 @@ export type PlanInfo = {
   name: string;
   dailyLimit: number | null;
   monthlyLimit: number | null;
+  priceUsd: number | null;
   blurb: string;
   highlights: string[];
   featured?: boolean;
@@ -15,6 +16,7 @@ export const PLAN_CATALOG: PlanInfo[] = [
     name: "Free",
     dailyLimit: 1000,
     monthlyLimit: 30000,
+    priceUsd: 0,
     blurb: "Start searching SAFER-active carriers with daily and monthly caps.",
     highlights: [
       "1,000 MCs / day",
@@ -29,6 +31,7 @@ export const PLAN_CATALOG: PlanInfo[] = [
     name: "Standard",
     dailyLimit: 5000,
     monthlyLimit: 150000,
+    priceUsd: 10,
     blurb: "For solo dispatchers who need a solid daily desk with room across the month.",
     highlights: [
       "5,000 MCs / day",
@@ -44,6 +47,7 @@ export const PLAN_CATALOG: PlanInfo[] = [
     name: "Plus",
     dailyLimit: 10000,
     monthlyLimit: 300000,
+    priceUsd: 20,
     blurb: "Higher volume for busy freight desks that search every day.",
     highlights: [
       "10,000 MCs / day",
@@ -58,6 +62,7 @@ export const PLAN_CATALOG: PlanInfo[] = [
     name: "Premium",
     dailyLimit: 20000,
     monthlyLimit: 600000,
+    priceUsd: 40,
     blurb: "High-capacity searching for teams that live in the desk.",
     highlights: [
       "20,000 MCs / day",
@@ -72,6 +77,7 @@ export const PLAN_CATALOG: PlanInfo[] = [
     name: "Custom",
     dailyLimit: null,
     monthlyLimit: null,
+    priceUsd: null,
     blurb: "Tailored daily and monthly limits for fleets and brokerages.",
     highlights: ["Custom day + month limits", "Volume pricing", "Dedicated onboarding", "Talk to us to set limits"],
   },
@@ -88,6 +94,12 @@ export function formatPlanLimit(daily: number | null | undefined, monthly?: numb
 export function formatPlanMonthly(monthly: number | null | undefined) {
   if (monthly == null) return "Custom / month";
   return `${monthly.toLocaleString()} / month`;
+}
+
+export function formatPlanPrice(priceUsd: number | null | undefined) {
+  if (priceUsd == null) return "Talk to us";
+  if (priceUsd === 0) return "Free";
+  return `$${priceUsd} / month`;
 }
 
 export function mergePlanCatalog(

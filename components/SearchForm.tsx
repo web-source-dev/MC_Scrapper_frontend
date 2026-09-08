@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from "react";
 import type { MetaResponse, SearchFormState, SearchMode } from "@/lib/types";
+import { allowedSearchModes, featuresForUser, hasFeature, type FeatureId } from "@/lib/features";
 import { EquipmentSelect } from "./EquipmentSelect";
 import { FilterChip } from "./FilterChip";
 import { MultiSelectChip } from "./MultiSelectChip";
@@ -12,6 +13,7 @@ type Props = {
   loading: boolean;
   remaining?: number;
   clockBlocked?: boolean;
+  features?: string[];
   onChange: (patch: Partial<SearchFormState>) => void;
   onSubmit: (event: FormEvent) => void;
 };
@@ -38,16 +40,21 @@ const RESULT_LIMITS = [
   { id: "10000", label: "10,000" },
 ];
 
-const REQUIREMENT_OPTIONS = [
+const CONTACT_OPTIONS = [
   { id: "requirePhone", label: "Has phone" },
   { id: "requireCell", label: "Has cell" },
   { id: "requireEmail", label: "Has email" },
   { id: "requireContact", label: "Phone or email" },
+] as const;
+
+const ADVANCED_REQUIREMENTS = [
   { id: "hazmatOnly", label: "Hazmat only" },
   { id: "interstateOnly", label: "Interstate" },
   { id: "intrastateOnly", label: "Intrastate" },
   { id: "freightOnly", label: "Freight only" },
 ] as const;
+
+const REQUIREMENT_OPTIONS = [...CONTACT_OPTIONS, ...ADVANCED_REQUIREMENTS];
 
 function countActiveFilters(form: SearchFormState) {
   let count = 0;
@@ -67,7 +74,7 @@ function countActiveFilters(form: SearchFormState) {
   return count;
 }
 
-export function SearchForm({ meta, form, loading, remaining, clockBlocked, onChange, onSubmit }: Props) {
+export function SearchForm({ meta, form, loading, remaining, clockBlocked, features, onChange, onSubmit }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const mode = form.searchMode;
@@ -75,6 +82,9 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
   const fleets = meta.fleetPresets?.length ? meta.fleetPresets : FALLBACK_FLEETS;
   const mcsOptions = meta.mcs150Options?.length ? meta.mcs150Options : FALLBACK_MCS;
   const activeFilters = useMemo(() => countActiveFilters(form), [form]);
+  const unlocked = featuresForUser({ features });
+  const can = (id: FeatureId) => hasFeature(unlocked, id);
+  const searchModes = meta.searchModes.filter((item) => allowedSearchModes(unlocked).includes(item.id));
 
   function applyFleet(id: string) {
     const preset = fleets.find((item) => item.id === id) || fleets[0];
@@ -85,20 +95,8 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
     });
   }
 
-  const selectedRequirements = REQUIREMENT_OPTIONS.filter((item) => form[item.id]).map((item) => item.id);
-
-  function applyRequirements(ids: string[]) {
-    onChange({
-      requirePhone: ids.includes("requirePhone"),
-      requireCell: ids.includes("requireCell"),
-      requireEmail: ids.includes("requireEmail"),
-      requireContact: ids.includes("requireContact"),
-      hazmatOnly: ids.includes("hazmatOnly"),
-      interstateOnly: ids.includes("interstateOnly"),
-      intrastateOnly: ids.includes("intrastateOnly"),
-      freightOnly: ids.includes("freightOnly"),
-    });
-  }
+  const selectedContacts = CONTACT_OPTIONS.filter((item) => form[item.id]).map((item) => item.id);
+  const selectedAdvanced = ADVANCED_REQUIREMENTS.filter((item) => form[item.id]).map((item) => item.id);
 
   function clearFilters() {
     onChange({
@@ -130,7 +128,7 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
       <FilterChip
         label="Search"
         value={form.searchMode}
-        options={meta.searchModes}
+        options={searchModes}
         onChange={(searchMode) => onChange({ searchMode: searchMode as SearchMode })}
         alwaysOn
         showSelectedOnly
@@ -153,6 +151,8 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
         options={fleets}
         onChange={applyFleet}
         defaultValue="any"
+        locked={!can("filters_fleet_safety")}
+        lockHint="Fleet filters are on Standard and above"
       />
       <FilterChip
         label="State"
@@ -169,6 +169,8 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
         options={meta.safetyRatings}
         onChange={(safetyRating) => onChange({ safetyRating })}
         defaultValue="any"
+        locked={!can("filters_fleet_safety")}
+        lockHint="Safety filters are on Standard and above"
       />
       <FilterChip
         label="MCS-150"
@@ -180,6 +182,8 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
         }))}
         onChange={(mcs150Months) => onChange({ mcs150Months })}
         defaultValue="any"
+        locked={!can("filters_fleet_safety")}
+        lockHint="MCS-150 filters are on Standard and above"
       />
       <FilterChip
         label="Results"
@@ -192,14 +196,41 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
         options={meta.equipmentTypes}
         selected={form.equipmentTypes}
         onChange={(equipmentTypes) => onChange({ equipmentTypes })}
+        locked={!can("filters_advanced")}
+        lockHint="Equipment filters are on Plus and above"
+      />
+      <MultiSelectChip
+        label="Contacts"
+        emptyLabel="Any"
+        options={[...CONTACT_OPTIONS]}
+        selected={selectedContacts}
+        onChange={(ids) =>
+          onChange({
+            requirePhone: ids.includes("requirePhone"),
+            requireCell: ids.includes("requireCell"),
+            requireEmail: ids.includes("requireEmail"),
+            requireContact: ids.includes("requireContact"),
+          })
+        }
+        locked={!can("filters_contacts")}
+        lockHint="Phone and email filters are on Standard and above"
       />
       <MultiSelectChip
         label="Requirements"
         emptyLabel="Any"
-        options={[...REQUIREMENT_OPTIONS]}
-        selected={selectedRequirements}
-        onChange={applyRequirements}
+        options={[...ADVANCED_REQUIREMENTS]}
+        selected={selectedAdvanced}
+        onChange={(ids) =>
+          onChange({
+            hazmatOnly: ids.includes("hazmatOnly"),
+            interstateOnly: ids.includes("interstateOnly"),
+            intrastateOnly: ids.includes("intrastateOnly"),
+            freightOnly: ids.includes("freightOnly"),
+          })
+        }
         exclusivePairs={[["interstateOnly", "intrastateOnly"]]}
+        locked={!can("filters_advanced")}
+        lockHint="Advanced filters are on Plus and above"
       />
       <FilterChip
         label="SAFER"
@@ -383,12 +414,15 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
           className={`search-advanced-toggle ${advancedOpen ? "is-open" : ""}`}
           aria-expanded={advancedOpen}
           onClick={() => setAdvancedOpen((open) => !open)}
+          disabled={!can("filters_advanced")}
+          title={can("filters_advanced") ? undefined : "More options are on Plus and above"}
         >
-          <span>More options</span>
+          <span>More options{can("filters_advanced") ? "" : " · Plus"}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
+        {can("filters_advanced") ? (
         <div className={`search-row search-row-advanced ${advancedOpen ? "is-open" : ""}`}>
           {mode !== "location" && showStateFilter ? (
             <>
@@ -459,6 +493,7 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, onCha
             />
           </div>
         </div>
+        ) : null}
       </div>
     </form>
   );
