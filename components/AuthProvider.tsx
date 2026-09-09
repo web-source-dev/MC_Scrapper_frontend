@@ -45,8 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       setUser(null);
-      if (err instanceof AuthError && err.code === "SESSION_REPLACED") {
-        setNotice("Signed in on another device. This desk was signed out.");
+      if (err instanceof AuthError && (err.code === "SESSION_ENDED" || err.code === "SESSION_REPLACED")) {
+        setNotice("Your session ended. Please sign in again.");
       } else if (err instanceof AuthError && err.code === "ACCOUNT_BANNED") {
         setNotice("This account is banned. Contact an administrator.");
       }
