@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "./AuthProvider";
 import { AuthShell } from "./AuthShell";
 import { AuthField } from "./AuthField";
@@ -31,9 +31,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export function SignupScreen() {
+function SignupForm() {
   const { startSignup, verifySignup, resendSignupOtp, user, ready } = useAuth();
   const router = useRouter();
+  const params = useSearchParams();
   const [step, setStep] = useState<"form" | "otp">("form");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
@@ -54,6 +55,16 @@ export function SignupScreen() {
   useEffect(() => {
     if (ready && user) router.replace("/dashboard");
   }, [ready, user, router]);
+
+  useEffect(() => {
+    const resumeEmail = params.get("email")?.trim() || "";
+    if (!resumeEmail) return;
+    setEmail(resumeEmail);
+    if (params.get("verify") === "1") {
+      setStep("otp");
+      setFormError("Enter the code from your email, or resend a new one.");
+    }
+  }, [params]);
 
   useEffect(() => {
     if (step !== "otp") return;
@@ -94,6 +105,11 @@ export function SignupScreen() {
       setFormError(null);
       setStep("form");
       focusFirst(next);
+      return;
+    }
+    if (code === "EMAIL_VERIFIED") {
+      setFormError(err instanceof Error ? err.message : "This account is already verified. Sign in instead.");
+      setStep("form");
       return;
     }
     if (code === "OTP_COOLDOWN") {
@@ -430,5 +446,13 @@ export function SignupScreen() {
         </button>
       </form>
     </AuthShell>
+  );
+}
+
+export function SignupScreen() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }

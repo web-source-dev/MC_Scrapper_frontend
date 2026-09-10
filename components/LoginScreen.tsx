@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent, Suspense } from "react";
 import { useAuth } from "./AuthProvider";
@@ -20,6 +21,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -47,12 +49,19 @@ function LoginForm() {
     }
     setBusy(true);
     setError(null);
+    setNeedsVerification(false);
     setErrors({});
     try {
       await login(checked.values.email, checked.values.password);
       router.replace(next.startsWith("/") ? next : "/dashboard");
     } catch (err) {
       const payload = isRecord(err) ? err : {};
+      const code = typeof payload.code === "string" ? payload.code : "";
+      if (code === "EMAIL_UNVERIFIED") {
+        setNeedsVerification(true);
+        setError(err instanceof Error ? err.message : "Verify your email before signing in.");
+        return;
+      }
       const fieldErrors =
         isRecord(payload.errors) &&
         Object.fromEntries(
@@ -71,7 +80,7 @@ function LoginForm() {
 
   return (
     <form className="auth-form" onSubmit={onSubmit} noValidate>
-      <p className="auth-hint">One device at a time. A new sign-in closes the other session.</p>
+      <p className="auth-hint">Use the same email and password you chose at signup.</p>
       {notice ? (
         <p className="auth-banner" role="status">
           {notice}
@@ -80,6 +89,12 @@ function LoginForm() {
       {error ? (
         <p className="auth-banner" role="alert">
           {error}
+          {needsVerification ? (
+            <>
+              {" "}
+              <Link href={`/signup?verify=1&email=${encodeURIComponent(email.trim())}`}>Finish email verification</Link>
+            </>
+          ) : null}
         </p>
       ) : null}
       <AuthField
