@@ -1,5 +1,6 @@
 import type { Carrier, DispatcherReview, MetaResponse, QcSnapshot, SearchFormState, VerifyResponse } from "./types";
 import { AuthError, authHeaders, clearToken, getToken, setToken, type AuthUser } from "./session";
+import { wakeBackend } from "./wakeBackend";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -41,6 +42,7 @@ async function readJson<T>(response: Response): Promise<T> {
 }
 
 export async function login(email: string, password: string) {
+  await wakeBackend();
   const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -58,6 +60,7 @@ export async function startSignup(input: {
   email: string;
   password: string;
 }) {
+  await wakeBackend();
   const response = await fetch(`${API_BASE}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -69,6 +72,7 @@ export async function startSignup(input: {
 }
 
 export async function verifySignup(email: string, otp: string) {
+  await wakeBackend();
   const response = await fetch(`${API_BASE}/api/auth/signup/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -80,6 +84,7 @@ export async function verifySignup(email: string, otp: string) {
 }
 
 export async function resendSignupOtp(email: string) {
+  await wakeBackend();
   const response = await fetch(`${API_BASE}/api/auth/signup/resend`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -118,6 +123,7 @@ export async function logout() {
 }
 
 export async function fetchMe() {
+  await wakeBackend();
   const response = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
   const payload = await readJson<{ ok: boolean; user: AuthUser }>(response);
   return payload.user;
@@ -129,6 +135,7 @@ export async function fetchMeta(): Promise<MetaResponse> {
 }
 
 export async function verifyCarriers(form: SearchFormState): Promise<VerifyResponse> {
+  await wakeBackend();
   const response = await fetch(`${API_BASE}/api/verify`, {
     method: "POST",
     headers: authHeaders({ "Content-Type": "application/json" }),
