@@ -39,6 +39,7 @@ export type FleetPreset = {
 export type MetaResponse = {
   searchModes: SearchModeOption[];
   equipmentTypes: EquipmentOption[];
+  cargoTypes?: EquipmentOption[];
   safetyRatings: SafetyOption[];
   fleetPresets?: FleetPreset[];
   mcs150Options?: SafetyOption[];
@@ -213,6 +214,7 @@ export type SearchFormState = {
   city: string;
   phone: string;
   equipmentTypes: string[];
+  cargoTypes: string[];
   minTrucks: string;
   maxTrucks: string;
   minDrivers: string;
@@ -292,6 +294,7 @@ export const DEFAULT_FORM: SearchFormState = {
   city: "",
   phone: "",
   equipmentTypes: [],
+  cargoTypes: [],
   minTrucks: "1",
   maxTrucks: "",
   minDrivers: "",

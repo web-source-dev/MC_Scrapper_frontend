@@ -22,6 +22,7 @@ import {
   type SearchFormState,
   type VerifyResponse,
 } from "@/lib/types";
+import { FALLBACK_CARGO_TYPES } from "./CargoSelect";
 import { ResultsTable } from "./ResultsTable";
 import { SearchForm } from "./SearchForm";
 import { DatHubPromoModal } from "./DatHubPromoModal";
@@ -52,6 +53,7 @@ const FALLBACK_META: MetaResponse = {
     { id: "household", label: "Household Goods" },
     { id: "hazmat", label: "Hazmat / Chemicals" },
   ],
+  cargoTypes: FALLBACK_CARGO_TYPES,
   safetyRatings: [
     { id: "any", label: "Any safety rating" },
     { id: "usable", label: "Satisfactory or not rated" },
@@ -129,7 +131,7 @@ export function SearchTool() {
     loadSearchSession()
       .then((saved) => {
         if (saved?.carriers) {
-          setForm(saved.form || localForm || DEFAULT_FORM);
+          setForm({ ...DEFAULT_FORM, ...(saved.form || localForm || DEFAULT_FORM) });
           setCarriers(saved.carriers);
           setResult(saved.result || null);
         }
@@ -291,7 +293,7 @@ export function SearchTool() {
                   <p>Recent</p>
                   <div className="recents-list">
                     {recents.map((item) => (
-                      <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
+                      <button key={item.id} type="button" className="recent-link" onClick={() => setForm({ ...DEFAULT_FORM, ...item.form })}>
                         {item.label}
                       </button>
                     ))}
@@ -307,7 +309,12 @@ export function SearchTool() {
                 <p>Recent</p>
                 <div className="recents-list">
                   {recents.map((item) => (
-                    <button key={item.id} type="button" className="recent-link" onClick={() => setForm(item.form)}>
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="recent-link"
+                      onClick={() => setForm({ ...DEFAULT_FORM, ...item.form })}
+                    >
                       {item.label}
                     </button>
                   ))}

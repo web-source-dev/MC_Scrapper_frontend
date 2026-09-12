@@ -66,15 +66,16 @@ export function PlansPage() {
 
       <div className="plans-grid">
         {plans.map((plan) => {
-          const current = user?.plan === plan.id;
+          const current = String(user?.plan || "").toLowerCase() === plan.id;
           return (
             <article
               key={plan.id}
               className={`plan-card ${plan.featured ? "is-featured" : ""} ${current ? "is-current" : ""}`}
+              aria-current={current ? "true" : undefined}
             >
               <div className="plan-card-top">
                 <p className="plan-name">{plan.name}</p>
-                {current ? <span className="mail-badge">Current</span> : null}
+                {current ? <span className="plan-current-badge">Your plan</span> : null}
               </div>
               <p className="plan-price">{formatPlanPrice(plan.priceUsd)}</p>
               <p className="plan-limit">{formatPlanMonthly(plan.monthlyLimit)}</p>

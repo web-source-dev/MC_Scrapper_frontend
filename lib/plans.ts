@@ -53,6 +53,7 @@ export const PLAN_CATALOG: PlanInfo[] = [
       "10,000 MCs / day",
       "300,000 MCs / month",
       "All Standard features",
+      "Equipment & cargo filters",
       "Faster multi-mode search",
       "Priority support",
     ],

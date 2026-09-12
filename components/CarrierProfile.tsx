@@ -56,6 +56,17 @@ function AddressBlock({ address, label }: { address?: CarrierAddress | null; lab
   );
 }
 
+function TagList({ items, empty, tone }: { items: string[]; empty: string; tone?: "equip" | "cargo" }) {
+  if (!items.length) return <p className="hint">{empty}</p>;
+  return (
+    <ul className={tone ? `profile-tags is-${tone}` : "profile-tags"}>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
 function Field({
   label,
   value,
@@ -458,9 +469,23 @@ export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
             </dl>
           </section>
           <section className="profile-group profile-span">
-            <h3>Cargo</h3>
-            <p>{carrier.equipment.length ? carrier.equipment.join(" · ") : "Equipment unspecified"}</p>
-            <p>{carrier.cargo.length ? carrier.cargo.join(" · ") : "Cargo not specified"}</p>
+            <h3>Equipment &amp; cargo</h3>
+            <div className="profile-cargo">
+              <div className="profile-cargo-block">
+                <p className="profile-cargo-label">
+                  Equipment
+                  <span>{carrier.equipment.length ? `${carrier.equipment.length} types` : "None inferred"}</span>
+                </p>
+                <TagList items={carrier.equipment} empty="No trailer type inferred from cargo." tone="equip" />
+              </div>
+              <div className="profile-cargo-block">
+                <p className="profile-cargo-label">
+                  Cargo
+                  <span>{carrier.cargo.length ? `${carrier.cargo.length} commodities` : "None listed"}</span>
+                </p>
+                <TagList items={carrier.cargo} empty="No FMCSA cargo marked." tone="cargo" />
+              </div>
+            </div>
           </section>
         </div>
       ) : null}

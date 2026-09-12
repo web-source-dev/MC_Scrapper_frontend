@@ -3,6 +3,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import type { MetaResponse, SearchFormState, SearchMode } from "@/lib/types";
 import { allowedSearchModes, featuresForUser, hasFeature, type FeatureId } from "@/lib/features";
+import { CargoSelect } from "./CargoSelect";
 import { EquipmentSelect } from "./EquipmentSelect";
 import { FilterChip } from "./FilterChip";
 import { MultiSelectChip } from "./MultiSelectChip";
@@ -62,7 +63,8 @@ function countActiveFilters(form: SearchFormState) {
   if (form.state) count += 1;
   if (form.safetyRating !== "any") count += 1;
   if (form.mcs150Months !== "any") count += 1;
-  if (form.equipmentTypes.length) count += 1;
+  if (form.equipmentTypes?.length) count += 1;
+  if (form.cargoTypes?.length) count += 1;
   if (REQUIREMENT_OPTIONS.some((item) => form[item.id])) count += 1;
   if (!form.strictSafer) count += 1;
   if (form.minTrucks && form.minTrucks !== "1") count += 1;
@@ -101,6 +103,7 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, featu
   function clearFilters() {
     onChange({
       equipmentTypes: [],
+      cargoTypes: [],
       minTrucks: "1",
       maxTrucks: "",
       minDrivers: "",
@@ -198,6 +201,13 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, featu
         onChange={(equipmentTypes) => onChange({ equipmentTypes })}
         locked={!can("filters_advanced")}
         lockHint="Equipment filters are on Plus and above"
+      />
+      <CargoSelect
+        options={meta.cargoTypes || []}
+        selected={form.cargoTypes || []}
+        onChange={(cargoTypes) => onChange({ cargoTypes })}
+        locked={!can("filters_advanced")}
+        lockHint="Cargo filters are on Plus and above"
       />
       <MultiSelectChip
         label="Contacts"

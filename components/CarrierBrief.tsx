@@ -27,27 +27,48 @@ export function CarrierBrief({ carrier, snapshot, snapshotLoading }: Props) {
     openCarrierEmail(carrier);
   }
 
+  const actions = (
+    <div className="dispatch-actions">
+      {tel ? (
+        <a
+          className={
+            decision.livePending || decision.verdict === "pass" ? "ghost dispatch-call" : "primary dispatch-call"
+          }
+          href={tel}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {decision.verdict === "pass" ? `Call anyway ${decision.phone}` : `Call ${decision.phone}`}
+        </a>
+      ) : null}
+      {MAIL_UI_ENABLED ? (
+        <button type="button" className="ghost dispatch-call" onClick={openEmail}>
+          {carrier.email ? "Email" : "Email…"}
+        </button>
+      ) : null}
+    </div>
+  );
+
+  if (decision.livePending) {
+    return (
+      <section className="dispatch-card is-checking" aria-busy="true" aria-live="polite">
+        <p className="sr-only">Checking live status before a cover decision.</p>
+        <div className="dispatch-head">
+          <span className="skeleton dispatch-skel-stamp" />
+          <span className="skeleton dispatch-skel-lead" />
+          {actions}
+        </div>
+        <span className="skeleton dispatch-skel-line" />
+        <span className="skeleton dispatch-skel-line is-short" />
+      </section>
+    );
+  }
+
   return (
     <section className={`dispatch-card is-${decision.verdict}`}>
       <div className="dispatch-head">
         <p className="dispatch-stamp">{stamp}</p>
         <p className="dispatch-lead">{lead}</p>
-        <div className="dispatch-actions">
-          {tel ? (
-            <a
-              className={decision.verdict === "pass" ? "ghost dispatch-call" : "primary dispatch-call"}
-              href={tel}
-              onClick={(event) => event.stopPropagation()}
-            >
-              {decision.verdict === "pass" ? `Call anyway ${decision.phone}` : `Call ${decision.phone}`}
-            </a>
-          ) : null}
-          {MAIL_UI_ENABLED ? (
-            <button type="button" className="ghost dispatch-call" onClick={openEmail}>
-              {carrier.email ? "Email" : "Email…"}
-            </button>
-          ) : null}
-        </div>
+        {actions}
       </div>
       {rest.length ? <p className="dispatch-more">{rest.join(" ")}</p> : null}
       <p className="dispatch-do">{decision.doNext}</p>

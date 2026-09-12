@@ -36,7 +36,7 @@ const CHAPTERS = [
 
 const CAPABILITIES = [
   { title: "Five search modes", body: "MC, USDOT, company, location, phone — one desk, no tab hopping." },
-  { title: "Fleet & safety filters", body: "Trucks, drivers, MCS-150, rating, hazmat, interstate, contacts." },
+  { title: "Fleet & safety filters", body: "Trucks, drivers, MCS-150, rating, cargo, hazmat, interstate, contacts." },
   { title: "Honest MC metering", body: "Daily and monthly caps, enforced server-side — clocks don’t reset usage." },
   { title: "CSV export", body: "Matched carriers out to CRM or outreach in one pass." },
 ];

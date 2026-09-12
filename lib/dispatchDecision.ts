@@ -412,9 +412,8 @@ export function decideDispatch(
     flags.push("live_unconfirmed");
   }
 
-  const livePending = Boolean(snapshotLoading) && verdict !== "pass";
+  const livePending = (Boolean(snapshotLoading) || snapshot == null) && verdict !== "pass";
   if (livePending) {
-    verdict = "caution";
     flags.unshift("live_pending");
   }
 

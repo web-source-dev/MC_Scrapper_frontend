@@ -260,6 +260,16 @@ export function ResultsTable({ carriers, truncated, onClear, canExport = true }:
     window.setTimeout(() => setCopied(""), 1600);
   }
 
+  function expandCarrier(id: string) {
+    setExpanded((current) => {
+      const next = current === id ? null : id;
+      if (next && !snapshots[next]) {
+        setSnapshotLoading((loading) => ({ ...loading, [next]: true }));
+      }
+      return next;
+    });
+  }
+
   useEffect(() => {
     if (!expanded) return;
     const carrier = carriers.find((row) => row.id === expanded);
@@ -396,7 +406,7 @@ export function ResultsTable({ carriers, truncated, onClear, canExport = true }:
           >
             <div
               className="result-card-head"
-              onClick={() => setExpanded((current) => (current === carrier.id ? null : carrier.id))}
+              onClick={() => expandCarrier(carrier.id)}
             >
               <input
                 type="checkbox"
@@ -493,9 +503,7 @@ export function ResultsTable({ carriers, truncated, onClear, canExport = true }:
               <Fragment key={carrier.id}>
                 <tr
                   className={expanded === carrier.id ? "is-open" : undefined}
-                  onClick={() =>
-                    setExpanded((current) => (current === carrier.id ? null : carrier.id))
-                  }
+                  onClick={() => expandCarrier(carrier.id)}
                 >
                   <td className="check-col" onClick={(event) => event.stopPropagation()}>
                     <input

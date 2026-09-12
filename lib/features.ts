@@ -27,7 +27,7 @@ export const FEATURES = [
   {
     id: "filters_advanced",
     label: "Advanced filters",
-    blurb: "Equipment, hazmat, interstate, and truck/driver bounds.",
+    blurb: "Equipment, cargo categories, hazmat, interstate, and truck/driver bounds.",
   },
   {
     id: "priority_support",
@@ -92,6 +92,7 @@ export function sanitizeSearchForm<T extends {
   safetyRating: string;
   mcs150Months: string;
   equipmentTypes: string[];
+  cargoTypes?: string[];
   minTrucks: string;
   maxTrucks: string;
   minDrivers: string;
@@ -108,6 +109,16 @@ export function sanitizeSearchForm<T extends {
   freightOnly: boolean;
 }>(form: T, features: string[]): T {
   const next = { ...form };
+  if (!Array.isArray(next.cargoTypes)) next.cargoTypes = [];
+  if (!Array.isArray(next.equipmentTypes)) next.equipmentTypes = [];
+  next.cargoTypes = next.cargoTypes.filter(
+    (id) =>
+      id !== "crgo_mobilehome" &&
+      id !== "crgo_usmail" &&
+      id !== "crgo_utility" &&
+      id !== "crgo_farmsupp" &&
+      id !== "crgo_waterwell",
+  );
   const modes = allowedSearchModes(features);
   if (modes.length && !modes.includes(next.searchMode as (typeof modes)[number])) {
     next.searchMode = modes[0];
@@ -125,6 +136,7 @@ export function sanitizeSearchForm<T extends {
   }
   if (!hasFeature(features, "filters_advanced")) {
     next.equipmentTypes = [];
+    next.cargoTypes = [];
     next.hazmatOnly = false;
     next.interstateOnly = false;
     next.intrastateOnly = false;
