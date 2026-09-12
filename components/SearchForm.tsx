@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import type { MetaResponse, SearchFormState, SearchMode } from "@/lib/types";
 import { allowedSearchModes, featuresForUser, hasFeature, type FeatureId } from "@/lib/features";
 import { CargoSelect } from "./CargoSelect";
 import { EquipmentSelect } from "./EquipmentSelect";
-import { FilterChip } from "./FilterChip";
+import { FilterChip, LockMark } from "./FilterChip";
 import { MultiSelectChip } from "./MultiSelectChip";
 
 type Props = {
@@ -56,6 +57,55 @@ const ADVANCED_REQUIREMENTS = [
 ] as const;
 
 const REQUIREMENT_OPTIONS = [...CONTACT_OPTIONS, ...ADVANCED_REQUIREMENTS];
+
+function LockedSearchField({
+  id,
+  label,
+  value,
+  placeholder,
+  tight,
+  locked,
+  inputMode,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: string;
+  tight?: boolean;
+  locked: boolean;
+  inputMode?: "numeric";
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className={`field ${tight ? "tight" : ""} ${locked ? "is-locked" : ""}`}>
+      <label htmlFor={id}>
+        {label}
+        {locked ? <LockMark /> : null}
+      </label>
+      <input
+        id={id}
+        inputMode={inputMode}
+        placeholder={placeholder}
+        value={value}
+        disabled={locked}
+        readOnly={locked}
+        onChange={(event) => {
+          if (locked) return;
+          onChange(event.target.value);
+        }}
+      />
+      {locked ? (
+        <Link
+          href="/plans"
+          className="field-lock-link"
+          title="More options are on Plus and above"
+          aria-label={`${label} is on Plus and above`}
+        />
+      ) : null}
+    </div>
+  );
+}
 
 function countActiveFilters(form: SearchFormState) {
   let count = 0;
@@ -424,7 +474,6 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, featu
           className={`search-advanced-toggle ${advancedOpen ? "is-open" : ""}`}
           aria-expanded={advancedOpen}
           onClick={() => setAdvancedOpen((open) => !open)}
-          disabled={!can("filters_advanced")}
           title={can("filters_advanced") ? undefined : "More options are on Plus and above"}
         >
           <span>More options{can("filters_advanced") ? "" : " · Plus"}</span>
@@ -432,78 +481,71 @@ export function SearchForm({ meta, form, loading, remaining, clockBlocked, featu
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
-        {can("filters_advanced") ? (
         <div className={`search-row search-row-advanced ${advancedOpen ? "is-open" : ""}`}>
           {mode !== "location" && showStateFilter ? (
             <>
-              <div className="field">
-                <label htmlFor="filter-city">City</label>
-                <input
-                  id="filter-city"
-                  placeholder="Any"
-                  value={form.city}
-                  onChange={(event) => onChange({ city: event.target.value })}
-                />
-              </div>
-              <div className="field tight">
-                <label htmlFor="filter-zip">ZIP</label>
-                <input
-                  id="filter-zip"
-                  inputMode="numeric"
-                  placeholder="Any"
-                  value={form.zip}
-                  onChange={(event) => onChange({ zip: event.target.value.replace(/\D/g, "").slice(0, 5) })}
-                />
-              </div>
+              <LockedSearchField
+                id="filter-city"
+                label="City"
+                placeholder="Any"
+                value={form.city}
+                locked={!can("filters_advanced")}
+                onChange={(city) => onChange({ city })}
+              />
+              <LockedSearchField
+                id="filter-zip"
+                label="ZIP"
+                placeholder="Any"
+                value={form.zip}
+                tight
+                locked={!can("filters_advanced")}
+                inputMode="numeric"
+                onChange={(zip) => onChange({ zip: zip.replace(/\D/g, "").slice(0, 5) })}
+              />
             </>
           ) : null}
 
-          <div className="field tight">
-            <label htmlFor="min-trucks">Min trucks</label>
-            <input
-              id="min-trucks"
-              inputMode="numeric"
-              placeholder="1"
-              value={form.minTrucks}
-              onChange={(event) =>
-                onChange({ minTrucks: event.target.value.replace(/[^\d]/g, ""), fleetPreset: "any" })
-              }
-            />
-          </div>
-          <div className="field tight">
-            <label htmlFor="max-trucks">Max trucks</label>
-            <input
-              id="max-trucks"
-              inputMode="numeric"
-              placeholder="Any"
-              value={form.maxTrucks}
-              onChange={(event) =>
-                onChange({ maxTrucks: event.target.value.replace(/[^\d]/g, ""), fleetPreset: "any" })
-              }
-            />
-          </div>
-          <div className="field tight">
-            <label htmlFor="min-drivers">Min drivers</label>
-            <input
-              id="min-drivers"
-              inputMode="numeric"
-              placeholder="Any"
-              value={form.minDrivers}
-              onChange={(event) => onChange({ minDrivers: event.target.value.replace(/[^\d]/g, "") })}
-            />
-          </div>
-          <div className="field tight">
-            <label htmlFor="max-drivers">Max drivers</label>
-            <input
-              id="max-drivers"
-              inputMode="numeric"
-              placeholder="Any"
-              value={form.maxDrivers}
-              onChange={(event) => onChange({ maxDrivers: event.target.value.replace(/[^\d]/g, "") })}
-            />
-          </div>
+          <LockedSearchField
+            id="min-trucks"
+            label="Min trucks"
+            placeholder="1"
+            value={form.minTrucks}
+            tight
+            locked={!can("filters_advanced")}
+            inputMode="numeric"
+            onChange={(minTrucks) => onChange({ minTrucks: minTrucks.replace(/[^\d]/g, ""), fleetPreset: "any" })}
+          />
+          <LockedSearchField
+            id="max-trucks"
+            label="Max trucks"
+            placeholder="Any"
+            value={form.maxTrucks}
+            tight
+            locked={!can("filters_advanced")}
+            inputMode="numeric"
+            onChange={(maxTrucks) => onChange({ maxTrucks: maxTrucks.replace(/[^\d]/g, ""), fleetPreset: "any" })}
+          />
+          <LockedSearchField
+            id="min-drivers"
+            label="Min drivers"
+            placeholder="Any"
+            value={form.minDrivers}
+            tight
+            locked={!can("filters_advanced")}
+            inputMode="numeric"
+            onChange={(minDrivers) => onChange({ minDrivers: minDrivers.replace(/[^\d]/g, "") })}
+          />
+          <LockedSearchField
+            id="max-drivers"
+            label="Max drivers"
+            placeholder="Any"
+            value={form.maxDrivers}
+            tight
+            locked={!can("filters_advanced")}
+            inputMode="numeric"
+            onChange={(maxDrivers) => onChange({ maxDrivers: maxDrivers.replace(/[^\d]/g, "") })}
+          />
         </div>
-        ) : null}
       </div>
     </form>
   );

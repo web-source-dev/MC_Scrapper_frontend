@@ -73,6 +73,7 @@ a.sidebar-nav:hover,
 a.dathub-promo-cta:hover,
 a.dathub-promo-dismiss:hover,
 a.plans-wa-btn:hover,
+a.field-lock-link:hover,
 a.auth-nav-link:hover,
 a.auth-nav-quiet:hover,
 a.auth-nav-cta:hover,
@@ -2890,6 +2891,25 @@ a.filter-chip-btn.is-locked {
   font-size: 12px;
   font-weight: 600;
   color: #3d4c5c;
+}
+
+.field.is-locked label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.field.is-locked input {
+  opacity: 0.58;
+  cursor: not-allowed;
+  background: var(--paper-2);
+}
+
+.field-lock-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 8px;
 }
 
 .hint {
