@@ -72,6 +72,7 @@ a.sidebar-nav:hover,
 .sidebar-nav a:hover,
 a.dathub-promo-cta:hover,
 a.dathub-promo-dismiss:hover,
+a.plans-wa-btn:hover,
 a.auth-nav-link:hover,
 a.auth-nav-quiet:hover,
 a.auth-nav-cta:hover,
@@ -7308,28 +7309,39 @@ a.plans-change-btn:hover {
   max-width: 36rem;
 }
 
-.plans-contact-meta {
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-  text-align: right;
-}
-
-.plans-contact-meta a {
+.plans-wa-btn,
+.plans-wa-btn:link,
+.plans-wa-btn:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff !important;
   font-size: 14px;
   font-weight: 800;
-  color: var(--navy);
-  text-decoration: none;
+  text-decoration: none !important;
+  box-shadow: 0 1px 0 rgba(15, 36, 60, 0.08);
 }
 
-.plans-contact-meta a:hover {
-  text-decoration: underline;
+.plans-wa-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
 }
 
-.plans-contact-meta span {
-  font-family: var(--font-ibm-plex), monospace;
-  font-size: 12px;
-  color: var(--muted);
+.plans-wa-btn:hover,
+.plans-wa-btn:focus-visible {
+  background: #1ebe5a;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
+.plans-wa-btn:active {
+  background: #128c7e;
 }
 
 .plans-grid {
@@ -7524,9 +7536,8 @@ a.plans-change-btn:hover {
     align-items: flex-start;
   }
 
-  .plans-contact-meta {
-    justify-items: start;
-    text-align: left;
+  .plans-wa-btn {
+    width: 100%;
   }
 
   .marketing-pain-grid {

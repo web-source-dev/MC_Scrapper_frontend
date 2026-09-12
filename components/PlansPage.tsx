@@ -57,11 +57,20 @@ export function PlansPage() {
           <p className="plans-contact-kicker">Need a different plan?</p>
           <h3>Contact us on WhatsApp</h3>
         </div>
-        <div className="plans-contact-meta">
-          <a href={planChangeWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
-            WhatsApp {DAT_HUB_PHONE_DISPLAY}
-          </a>
-        </div>
+        <a
+          className="plans-wa-btn"
+          href={planChangeWhatsAppUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M17.47 14.38c-.28-.14-1.64-.81-1.9-.9-.25-.1-.44-.14-.62.14-.18.27-.72.9-.88 1.08-.16.18-.33.2-.61.07-.28-.14-1.18-.43-2.25-1.38-.83-.74-1.39-1.66-1.55-1.94-.16-.27-.02-.42.12-.56.13-.13.28-.33.42-.5.14-.16.18-.27.28-.45.09-.18.05-.34-.02-.48-.07-.14-.62-1.49-.85-2.04-.22-.53-.45-.46-.62-.47h-.53c-.18 0-.48.07-.73.34-.25.27-.96.94-.96 2.3 0 1.35.98 2.66 1.12 2.84.14.18 1.93 2.95 4.68 4.14.65.28 1.16.45 1.56.57.65.21 1.25.18 1.72.11.53-.08 1.64-.67 1.87-1.32.23-.65.23-1.2.16-1.32-.07-.11-.25-.18-.53-.32ZM12.04 2C6.5 2 2 6.48 2 12c0 1.77.46 3.45 1.27 4.9L2 22l5.24-1.37A9.96 9.96 0 0 0 12.04 22C17.56 22 22 17.52 22 12S17.56 2 12.04 2Z"
+            />
+          </svg>
+          WhatsApp {DAT_HUB_PHONE_DISPLAY}
+        </a>
       </section>
 
       <div className="plans-grid">
