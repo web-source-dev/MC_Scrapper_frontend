@@ -135,8 +135,6 @@ export function NewDotsPage() {
         <div className="mail-studio nd-page">
           <header className="mail-studio-top">
             <div className="mail-studio-title">
-              <p className="mail-eyebrow">Leads</p>
-              <h2>New DOTs</h2>
               <p className="mail-lede">
                 Active Dry Van, Reefer and Flatbed carriers registered or updated
                 {listWindow

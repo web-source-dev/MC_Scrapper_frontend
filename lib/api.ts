@@ -2,7 +2,7 @@ import type { Carrier, DispatcherReview, MetaResponse, QcSnapshot, SearchFormSta
 import { AuthError, authHeaders, clearToken, getToken, setToken, type AuthUser } from "./session";
 import { wakeBackend } from "./wakeBackend";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { API_BASE } from "./apiBase";
 
 async function readJson<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => ({}))) as T & {

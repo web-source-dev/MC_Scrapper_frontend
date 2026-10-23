@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { API_BASE } from "./apiBase";
 
 /** Free-tier hosts can take ~60s to cold start; allow enough time for the wake ping. */
 const WAKE_TIMEOUT_MS = 120_000;
