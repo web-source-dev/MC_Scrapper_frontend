@@ -5,9 +5,16 @@ import { DAT_HUB_PHONE_DISPLAY, datHubWhatsAppUrl } from "@/lib/datHub";
 type Props = {
   open: boolean;
   onClose: () => void;
+  copy?: string;
+  dismissLabel?: string;
 };
 
-export function DatHubPromoModal({ open, onClose }: Props) {
+export function DatHubPromoModal({
+  open,
+  onClose,
+  copy = "While your MC search runs, message us on WhatsApp for DAT Loadboard access.",
+  dismissLabel = "Continue searching",
+}: Props) {
   if (!open) return null;
 
   return (
@@ -24,9 +31,7 @@ export function DatHubPromoModal({ open, onClose }: Props) {
         </button>
         <p className="dathub-promo-kicker">Partner offer</p>
         <h2 id="dathub-promo-title">Need DAT Loadboard access?</h2>
-        <p className="dathub-promo-copy">
-          While your MC search runs, message us on WhatsApp for DAT Loadboard access.
-        </p>
+        <p className="dathub-promo-copy">{copy}</p>
         <a
           className="dathub-promo-banner"
           href={datHubWhatsAppUrl()}
@@ -47,7 +52,7 @@ export function DatHubPromoModal({ open, onClose }: Props) {
             WhatsApp us
           </a>
           <button type="button" className="dathub-promo-dismiss" onClick={onClose}>
-            Continue searching
+            {dismissLabel}
           </button>
         </div>
       </div>

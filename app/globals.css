@@ -7641,3 +7641,130 @@ a.plans-change-btn:hover {
   color: var(--bad) !important;
 }
 
+
+/* New DOTs — public lead list (no desk shell): pinned to the viewport, the table scrolls inside */
+.nd-standalone {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nd-main {
+  flex: 1;
+  min-height: 0;
+  width: min(1680px, calc(100% - 32px));
+  margin: 10px auto 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.nd-page .results {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nd-page .results-toolbar {
+  flex: none;
+}
+
+.nd-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.nd-table {
+  table-layout: fixed;
+  min-width: 1370px;
+}
+
+.nd-table thead th {
+  z-index: 1;
+}
+
+/* One fixed row height keeps 100-row pages tidy; long names and emails truncate */
+.nd-table tbody tr.nd-row td {
+  height: 52px;
+  padding-top: 0;
+  padding-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nd-table .nd-line {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 18px;
+}
+
+.nd-table .nd-sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.nd-table tbody tr.is-reached td {
+  opacity: 0.55;
+}
+
+.nd-table tbody tr.nd-spacer,
+.nd-table tbody tr.nd-spacer:hover {
+  cursor: default;
+  background: transparent;
+}
+
+.nd-table tbody tr.nd-spacer > td {
+  padding: 0;
+  border: 0;
+}
+
+.nd-scroll.is-loading {
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.nd-footer {
+  flex: none;
+  padding-top: 10px;
+}
+
+.nd-page-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nd-page-jump label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nd-page-jump input {
+  width: 76px;
+  padding: 6px 8px;
+}
+
+@media (max-width: 768px) {
+  .nd-main {
+    width: calc(100% - 16px);
+    margin: 8px auto;
+  }
+
+  .nd-footer .pager {
+    flex-wrap: wrap;
+  }
+}
+
+.nd-table tbody tr.nd-status > td {
+  padding: 14px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}

@@ -11,6 +11,8 @@ type Props = {
   carrier: Carrier;
   snapshot: QcSnapshot | null;
   snapshotLoading?: boolean;
+  /** New DOTs lead list: no safety tab, no Pass/Caution/Cover brief, no AI-drafted reports. */
+  leadView?: boolean;
 };
 
 const EMPTY_UNITS: UnitCounts = { owned: 0, termLeased: 0, tripLeased: 0, total: 0 };
@@ -302,7 +304,7 @@ function SnapshotPanel({ snapshot, loading }: { snapshot: QcSnapshot | null; loa
 
 type ProfileTab = "overview" | "fleet" | "safety" | "live" | "reports";
 
-export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
+export function CarrierProfile({ carrier, snapshot, snapshotLoading, leadView = false }: Props) {
   const [tab, setTab] = useState<ProfileTab>("overview");
   const fleet = carrier.fleet;
   const drivers = carrier.driverCounts;
@@ -319,7 +321,9 @@ export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
             ["live", "Live snapshot"],
             ["reports", "Reports"],
           ] as const
-        ).map(([id, label]) => (
+        )
+          .filter(([id]) => !leadView || (id !== "safety" && id !== "reports"))
+          .map(([id, label]) => (
           <button
             key={id}
             type="button"
@@ -335,11 +339,9 @@ export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
 
       {tab === "overview" ? (
         <div className="profile-grid" role="tabpanel">
-          <CarrierBrief
-            carrier={carrier}
-            snapshot={snapshot}
-            snapshotLoading={snapshotLoading}
-          />
+          {leadView ? null : (
+            <CarrierBrief carrier={carrier} snapshot={snapshot} snapshotLoading={snapshotLoading} />
+          )}
           <section className="profile-group">
             <h3>Identity</h3>
             <dl>
@@ -398,7 +400,7 @@ export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
                     href={carrier.email ? `mailto:${carrier.email}` : undefined}
                     compact
                   />
-                  {MAIL_UI_ENABLED ? (
+                  {MAIL_UI_ENABLED && !leadView ? (
                     <button type="button" className="text-btn" onClick={() => openCarrierEmail(carrier)}>
                       Send
                     </button>
@@ -423,8 +425,12 @@ export function CarrierProfile({ carrier, snapshot, snapshotLoading }: Props) {
             )}
             <dl>
               <Field label="USDOT" value={carrier.usdotStatus} />
-              <Field label="Authority" value={carrier.authorityStatus} />
+              <Field
+                label="Authority"
+                value={leadView && !carrier.mcNumber ? "No MC available" : carrier.authorityStatus}
+              />
               <Field label="Added" value={carrier.addedDate} />
+              {leadView ? <Field label="MCS-150" value={carrier.mcs150Date} /> : null}
             </dl>
           </section>
         </div>

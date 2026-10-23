@@ -20,11 +20,12 @@ import { fetchEmailStatus } from "@/lib/api";
 import { DAT_HUB_PHONE_DISPLAY, datHubWhatsAppUrl } from "@/lib/datHub";
 import type { AuthUser } from "@/lib/session";
 
-type DeskNavId = "dashboard" | "search" | "plans" | "templates" | "gmail" | "recent";
+type DeskNavId = "dashboard" | "search" | "new-dots" | "plans" | "templates" | "gmail" | "recent";
 
 const NAV: Array<{ id: DeskNavId; href: string; label: string; mailOnly?: boolean }> = [
   { id: "dashboard", href: "/dashboard", label: "Dashboard" },
   { id: "search", href: "/search", label: "Search" },
+  { id: "new-dots", href: "/new-dots", label: "New DOTs" },
   { id: "plans", href: "/plans", label: "Plans" },
   { id: "templates", href: "/templates", label: "Templates", mailOnly: true },
   { id: "gmail", href: "/gmail", label: "Gmail", mailOnly: true },
@@ -34,6 +35,7 @@ const NAV: Array<{ id: DeskNavId; href: string; label: string; mailOnly?: boolea
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/search": "Search",
+  "/new-dots": "New DOTs",
   "/plans": "Plans",
   "/templates": "Templates",
   "/gmail": "Gmail",
@@ -82,6 +84,14 @@ function NavIcon({ id }: { id: DeskNavId }) {
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
         <path d="M16 16l5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (id === "new-dots") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M8 12l3 3 5-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }

@@ -315,3 +315,52 @@ export async function fetchCarrierBrief(carrier: Carrier, snapshot?: QcSnapshot 
   });
   return readJson<{ ok: boolean; text: string; model: string }>(response);
 }
+
+export type NewDotsFilters = {
+  /** "" = all three equipment types */
+  equipment: "" | "van" | "reefer" | "flatbed";
+  reached: "all" | "reached" | "unreached";
+  state: string;
+  q: string;
+};
+
+export type NewDotsQuery = NewDotsFilters & {
+  offset: number;
+  pageSize: number;
+  /** false skips the server-side count when the total is already known */
+  withCount: boolean;
+};
+
+export type NewDotCarrier = Carrier & { reached: boolean };
+
+export async function fetchNewDots(query: NewDotsQuery, signal?: AbortSignal) {
+  await wakeBackend();
+  const search = new URLSearchParams();
+  search.set("offset", String(query.offset));
+  search.set("pageSize", String(query.pageSize));
+  if (!query.withCount) search.set("count", "0");
+  if (query.equipment) search.set("equipment", query.equipment);
+  search.set("reached", query.reached);
+  if (query.state) search.set("state", query.state);
+  if (query.q) search.set("q", query.q);
+  // Public page — no session header.
+  const response = await fetch(`${API_BASE}/api/new-dots?${search.toString()}`, { signal });
+  return readJson<{
+    ok: boolean;
+    carriers: NewDotCarrier[];
+    total: number | null;
+    offset: number;
+    pageSize: number;
+    reachedCount: number;
+    window: { from: string; to: string; importedAt: string };
+  }>(response);
+}
+
+export async function setDotReached(dotNumber: number, reached: boolean) {
+  const response = await fetch(`${API_BASE}/api/new-dots/reached`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dotNumber, reached }),
+  });
+  return readJson<{ ok: boolean; dotNumber: string; reached: boolean; reachedCount: number }>(response);
+}
