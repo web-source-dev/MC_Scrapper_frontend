@@ -1,4 +1,12 @@
-import type { Carrier, DispatcherReview, MetaResponse, QcSnapshot, SearchFormState, VerifyResponse } from "./types";
+import type {
+  Carrier,
+  DispatcherReview,
+  MetaResponse,
+  QcSnapshot,
+  SearchFormState,
+  StateOption,
+  VerifyResponse,
+} from "./types";
 import { AuthError, authHeaders, clearToken, getToken, setToken, type AuthUser } from "./session";
 import { wakeBackend } from "./wakeBackend";
 
@@ -354,6 +362,11 @@ export async function fetchNewDots(query: NewDotsQuery, signal?: AbortSignal) {
     reachedCount: number;
     window: { from: string; to: string; importedAt: string };
   }>(response);
+}
+
+export async function fetchNewDotsStates() {
+  const response = await fetch(`${API_BASE}/api/new-dots/states`);
+  return readJson<{ ok: boolean; states: StateOption[] }>(response);
 }
 
 export async function setDotReached(dotNumber: number, reached: boolean) {

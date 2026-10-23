@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import { fetchMeta, fetchNewDots, setDotReached, type NewDotCarrier, type NewDotsFilters } from "@/lib/api";
+import { fetchNewDots, fetchNewDotsStates, setDotReached, type NewDotCarrier, type NewDotsFilters } from "@/lib/api";
 import type { StateOption } from "@/lib/types";
 import { CarrierProfile } from "./CarrierProfile";
 import { DatHubPromoModal } from "./DatHubPromoModal";
@@ -41,8 +41,8 @@ export function NewDotsPage() {
   const knownTotal = useRef<{ key: string; total: number } | null>(null);
 
   useEffect(() => {
-    void fetchMeta()
-      .then((meta) => setStates(meta.states))
+    void fetchNewDotsStates()
+      .then((result) => setStates(result.states))
       .catch(() => null);
   }, []);
 
