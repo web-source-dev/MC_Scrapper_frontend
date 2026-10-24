@@ -136,7 +136,7 @@ export function NewDotsPage() {
           <header className="mail-studio-top">
             <div className="mail-studio-title">
               <p className="mail-lede">
-                Active Dry Van, Reefer and Flatbed carriers registered or updated
+                Active Dry Van, Reefer and Flatbed carriers with active MC authority, registered or updated
                 {listWindow
                   ? ` from ${formatDay(listWindow.from)} to ${formatDay(listWindow.to)}`
                   : " in a fixed 6-month window"}
